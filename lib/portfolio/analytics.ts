@@ -28,7 +28,7 @@ export interface AccountValuation {
   cash: number | null;
   positionsValue: number | null;
   totalAssets: number | null;
-      completeness: (validValues.length + (finite(args.cash) ? 1 : 0)) / (rows.length + 1),
+  completeness: number;
   status: "complete" | "partial" | "unavailable";
   asOf: string | null;
 }
