@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "csv_content_type_required" }, { status: 415 });
   }
   const csv = await request.text();
-  if (!csv.trim() || csv.length > 2_000_000) {
+  if (!csv.trim() || Buffer.byteLength(csv, "utf8") > 2_000_000) {
     return NextResponse.json({ error: "invalid_csv_size", maximumBytes: 2_000_000 }, { status: 413 });
   }
   const reportDate = new URL(request.url).searchParams.get("reportDate") ?? undefined;
