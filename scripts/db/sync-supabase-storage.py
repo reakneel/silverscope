@@ -133,11 +133,11 @@ def sync(args: argparse.Namespace) -> int:
         buckets = [bucket for bucket in buckets if bucket.get("name") == args.bucket]
         if not buckets:
             raise RuntimeError(f"Bucket not found: {args.bucket}")
-    manifest["buckets"] = {bucket["name"]: {
+    manifest["buckets"].update({bucket["name"]: {
         "id": bucket.get("id"), "name": bucket.get("name"), "public": bucket.get("public"),
         "file_size_limit": bucket.get("file_size_limit"),
         "allowed_mime_types": bucket.get("allowed_mime_types"),
-    } for bucket in buckets}
+    } for bucket in buckets})
     downloaded = skipped = 0
     for bucket in buckets:
         bucket_name = str(bucket["name"])
