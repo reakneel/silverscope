@@ -28,7 +28,7 @@ export function GET() {
       scoringEngine: "available",
       liveMarketData: false,
       auth: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-      billing: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.STRIPE_PRICE_PRO && process.env.STRIPE_PRICE_ULTRA && databaseConfigured),
+      billing: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.STRIPE_PRICE_PRO && process.env.STRIPE_PRICE_ULTRA && process.env.STRIPE_PRICE_PRO_DISPLAY && process.env.STRIPE_PRICE_ULTRA_DISPLAY && process.env.NEXT_PUBLIC_APP_URL && databaseConfigured),
     },
     note: "Configuration presence does not prove credential validity or imply that market data has been ingested.",
   }, { status: 200, headers: { "Cache-Control": "no-store" } });
