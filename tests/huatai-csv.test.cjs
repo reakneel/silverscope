@@ -30,7 +30,7 @@ test("previews executions with date, direction, amount, fees and taxes", () => {
   assert.equal(row.grossAmount, 910);
   assert.equal(row.fees, 5);
   assert.equal(row.sourceTransactionId, "HT001");
-  assert.equal(Date.parse(row.tradeAt), Date.parse("2026-11-19T09:31:00.000Z"));
+  assert.equal(Date.parse(row.tradeAt), Date.parse("2026-11-19T01:31:00.000Z"));
 });
 
 test("rejects malformed rows and fails closed on unrecognized headers", () => {
@@ -55,4 +55,12 @@ test("computes SHA-256 over original bytes and enforces file size", () => {
   const result = previewHuataiCsv(buffer(csv), "holdings_snapshot");
   assert.equal(result.sha256, createHash("sha256").update(bytes).digest("hex"));
   assert.throws(() => previewHuataiCsv(new ArrayBuffer(10 * 1024 * 1024 + 1), "holdings_snapshot"), /10 MB/);
+});
+
+test("interprets China exchange local time and fingerprints normalized records", () => {
+  const a = previewHuataiCsv(buffer("证券代码,持仓数量,证券名称\\n600000,100,浦发银行"), "holdings_snapshot");
+  const b = previewHuataiCsv(buffer("证券名称,证券代码,持仓数量\\n浦发银行,600000,100"), "holdings_snapshot");
+  assert.equal(a.acceptedRows[0].fingerprint, b.acceptedRows[0].fingerprint);
+  const trade = previewHuataiCsv(buffer("成交日期,成交时间,证券代码,买卖标志,成交数量,成交金额\\n2026-11-19,09:31:00,600000,买入,100,910"), "executions");
+  assert.equal(trade.acceptedRows[0].normalized.tradeAt, "2026-11-19T01:31:00.000Z");
 });
