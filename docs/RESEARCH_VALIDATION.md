@@ -7,6 +7,8 @@
 - `simulateFuturesExecution`: close-of-bar target positions filled at the next bar open, futures multiplier P&L, per-side commissions, adverse slippage, explicit contract roll prices, initial-margin checks and maintenance-margin liquidation.
 - `simulateVolumeConstrainedOrder`: market-order fills capped by a configured fraction of each bar's reported volume; unfilled quantity is returned explicitly.
 - `calculatePortfolioRisk`: multi-contract gross/net notional, additive initial/maintenance margin, risk-group concentration and configurable account-limit checks.
+- `simulateVolumeConstrainedOrder`: market-order fills capped by a configured fraction of each bar's reported volume; unfilled quantity is returned explicitly.
+- `calculatePortfolioRisk`: multi-contract gross/net notional, additive initial/maintenance margin, risk-group concentration and configurable account-limit checks.
 - `sizeFuturesPosition`: conservative integer contract sizing from equity risk budget, stop distance, maximum position and optional initial-margin cap.
 - `buildPointInTimeFeatureSignals`: strict historical feature construction requiring verified observations with known publication timestamps no later than the decision time.
 
@@ -21,6 +23,12 @@ A contract change requires an explicit `rollFromPrice` representing the old cont
 Initial and maintenance margin rates are optional but must be supplied together. Initial margin is checked before increasing/opening a position. Equity is checked against maintenance margin after each bar mark; if breached, the simulator liquidates at that bar's close with configured slippage and commission. These are simplified percentage-of-notional assumptions, not exchange-specific SPAN or broker house-margin rules.
 
 The position-sizing helper estimates risk as stop distance multiplied by contract multiplier. It floors to whole contracts and applies both risk-budget and initial-margin constraints. It does not guarantee the stop can execute at its stated price; gaps and liquidity can cause larger losses.
+
+## Partial-fill and portfolio-risk assumptions
+
+The volume-constrained order helper caps each bar fill at `floor(volume * maxParticipationRate)`, applies configured adverse slippage and per-side commission, and returns both filled and remaining quantity. Remaining quantity is never assumed to execute after the supplied bars. It is a bar-volume capacity approximation, not an order-book simulator: queue priority, bid/ask spread, market impact, latency, and intrabar sequencing remain unmodeled. It is deliberately separate from the single-contract simulator until a multi-instrument order lifecycle can represent partially closed rolls without losing residual positions.
+
+The portfolio risk snapshot aggregates signed and gross notional across unique contract IDs and sums each contract's initial and maintenance margin independently. It supports explicit gross, net, margin, per-instrument contract and risk-group limits. No cross-margin, spread credit, hedge offset, FX conversion, or exchange SPAN calculation is inferred. All positions must use a consistent account currency and point-in-time marks supplied by the caller.
 
 ## Partial-fill and portfolio-risk assumptions
 
