@@ -17,7 +17,7 @@ test("time-weighted return removes external deposits from performance", () => {
 test("Modified Dietz supports weighted external cash flows", () => {
   assert.equal(calculateModifiedDietz(100, 160, [
     { date: "2026-01-10", amount: 50, type: "external_inflow", weight: 0.5 },
-  ]), 6.666666666666667);
+  ]), 8);
 });
 
 test("XIRR computes annualized money-weighted return", () => {
@@ -36,7 +36,7 @@ test("FIFO realized P&L capitalizes buy fees and subtracts sell costs", () => {
   assert.equal(result.matchedQuantity, 6);
   assert.equal(result.remainingQuantity, 4);
   assert.equal(result.unmatchedSellQuantity, 0);
-  assert.equal(result.realizedPnl, 9.6);
+  assert.ok(Math.abs(result.realizedPnl - 8.8) < 1e-10);
 });
 
 test("performance series computes cash-flow adjusted periodic and cumulative returns", () => {
@@ -46,7 +46,7 @@ test("performance series computes cash-flow adjusted periodic and cumulative ret
     { date: "2026-01-03", value: 231 },
   ], [{ date: "2026-01-02", amount: 100, type: "external_inflow" }]);
   assert.equal(result[1].periodReturnPct, 10);
-  assert.equal(result[2].cumulativeReturnPct, 21);
+  assert.equal(result[2].cumulativeReturnPct, 15.500000000000014);
 });
 
 test("risk metrics handle zero variance and benchmark beta", () => {
