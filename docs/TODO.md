@@ -39,7 +39,7 @@
 - [ ] Automate official CME XLS ingestion after verifying a stable supported format and permitted access terms
 - [ ] Add LBMA holdings and vault data adapter after obtaining licensed data access
 - [ ] Add integration tests against a staging database
-- [ ] Build point-in-time walk-forward research and cost-aware backtest metrics
+- [x] Add foundational walk-forward splitter and cost-aware backtest metric primitives\n- [ ] Build an executable point-in-time strategy runner with order, roll, fee and slippage simulation
 - [ ] Add source freshness / ingestion failure monitoring and alerting
 
 ## P2 — Accounts and paid product
