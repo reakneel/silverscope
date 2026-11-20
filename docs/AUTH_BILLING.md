@@ -8,6 +8,7 @@
 
 ## Stripe subscriptions
 - `POST /api/billing/checkout` requires an authenticated user and accepts only `pro` or `ultra`. Stripe Price IDs come from `STRIPE_PRICE_PRO` and `STRIPE_PRICE_ULTRA`.
+- `POST /api/billing/portal` creates an authenticated Stripe customer-portal session for the user's stored Stripe customer.
 - `POST /api/billing/webhook` verifies the raw-body Stripe signature with a timestamp tolerance, claims event IDs in the append-only service-role ledger, and upserts subscription state on subscription lifecycle events.
 - Apply `0007_stripe_webhook_events.sql` after `0006_research_snapshots.sql` and the initial schema. The service-role key is used only server-side; the event ledger has RLS enabled and no client policies.
 
