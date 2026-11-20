@@ -5,7 +5,7 @@ import { supabaseAdminRequest } from "@/lib/supabase/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const providers = new Set(["huatai", "tonghuashun", "other_broker", "xueqiu"]);
+const providers = new Set(["huatai", "other_broker", "xueqiu"]);
 const currencies = new Set(["CNY", "HKD", "USD"]);
 
 export async function GET() {
