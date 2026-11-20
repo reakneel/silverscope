@@ -51,6 +51,10 @@ Open http://localhost:3000.
 - lib/quant/calibration.ts — historical mean / sample-standard-deviation preview
 - lib/quant/signals.ts — evidence-backed regime snapshot generation
 - lib/quant/supabase-pipeline.ts — historical observation retrieval and idempotent score persistence
+- lib/research/backtest.ts — net return and risk metrics with explicit assumptions
+- lib/research/walk-forward.ts — chronological expanding / rolling folds with embargo
+- lib/research/futures-execution.ts — next-bar futures execution, fees, slippage and explicit roll prices
+- lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
 The score engine accepts normalized feature scores, not raw market values in incompatible units. It withholds output when weighted indicator breadth, group count or confidence requirements are not met. With only the initial three FRED macro series and one CFTC positioning series, weighted coverage is 20%, so the model intentionally does not publish a composite score yet. Empirical calibration is required; the scoring endpoint will not manufacture calibration values.
