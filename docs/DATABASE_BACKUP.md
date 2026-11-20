@@ -69,6 +69,10 @@ bash scripts/db/restore-local.sh backups/supabase/silverscope-supabase-YYYYMMDDT
 
 The restore operation uses `--clean --if-exists` and **replaces objects in the target database**. Never set `RESTORE_DATABASE_URL` to the production Supabase host. Verify local auth, RLS, migrations, and representative application queries after a restore. Match the local PostgreSQL major version to the source where possible.
 
+## Storage usage report
+
+Run `supabase/diagnostics/storage-usage.sql` in the Supabase SQL Editor to inspect database size and the largest tables/indexes. It is read-only and reports PostgreSQL database storage; Supabase Storage object bytes are billed separately.
+
 ## Retention and storage-cost policy
 
 - Keep at least 30 daily local database archives as the initial default.
