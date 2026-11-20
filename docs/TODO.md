@@ -56,6 +56,7 @@
 
 ## P2 — Accounts and paid product
 - [x] Add Supabase password login/logout and secure HttpOnly session refresh endpoints
+- [x] Add sign-in page, account session menu, pricing actions and customer portal UI
 - [x] Add Pro/Ultra-gated owner-scoped alert APIs with plan quotas
 - [x] Add Ultra-gated server-built point-in-time research run persistence
 - [ ] Enforce authentication on any future account-specific dashboard pages and remaining user-owned API resources
