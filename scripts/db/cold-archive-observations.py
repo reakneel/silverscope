@@ -110,7 +110,7 @@ CREATE TEMP TABLE _silverscope_archive_rows(row_json jsonb NOT NULL) ON COMMIT D
 \copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
 SELECT set_config('silverscope.archive_cutoff', '{cutoff}', true);
 LOCK TABLE public.observations IN SHARE ROW EXCLUSIVE MODE;
-DO $
+DO $$
 DECLARE expected_count bigint; matched_count bigint; eligible_count bigint; deleted_count bigint;
         cutoff_value timestamptz := current_setting('silverscope.archive_cutoff')::timestamptz;
 BEGIN
