@@ -19,3 +19,18 @@ order by pg_total_relation_size(relid) desc
 limit 30;
 
 -- This reports table/index storage only. Supabase Storage object bytes are billed separately.
+
+-- Hot observations versus monthly historical partitions.
+select 'hot_observations' as storage_layer, count(*) as rows,
+       pg_size_pretty(pg_total_relation_size('public.observations')) as relation_size
+from public.observations
+union all
+select 'historical_archive' as storage_layer, count(*) as rows,
+       pg_size_pretty(pg_total_relation_size('public.observation_archive')) as relation_size
+from public.observation_archive;
+
+select inhrelid::regclass as archive_partition,
+       pg_size_pretty(pg_total_relation_size(inhrelid)) as partition_size
+from pg_inherits
+where inhparent = 'public.observation_archive'::regclass
+order by inhrelid::regclass::text;

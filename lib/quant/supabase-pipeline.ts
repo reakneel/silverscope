@@ -24,7 +24,7 @@ export async function fetchRecentObservations(options: PipelineOptions, limit = 
     select: "source_id,indicator_key,value,unit,observed_at,published_at,fetched_at,confidence,status,source_url,source_record_id",
     order: "observed_at.desc", limit: String(Math.max(1, Math.min(limit, 5000))),
   });
-  const rows = await rest(`observations?${query.toString()}`) as Array<Record<string, unknown>> | null;
+  const rows = await rest(`observation_history?${query.toString()}`) as Array<Record<string, unknown>> | null;
   return (rows ?? []).map((row) => ({
     sourceId: String(row.source_id), indicatorKey: String(row.indicator_key),
     value: Number(row.value), unit: String(row.unit), observedAt: String(row.observed_at),
@@ -69,7 +69,7 @@ export async function fetchObservationsForIndicator(
     indicator_key: `eq.${indicatorKey}`, order: "observed_at.desc",
     limit: String(Math.max(1, Math.min(limit, 5000))),
   });
-  const rows = await rest(`observations?${query.toString()}`) as Array<Record<string, unknown>> | null;
+  const rows = await rest(`observation_history?${query.toString()}`) as Array<Record<string, unknown>> | null;
   return (rows ?? []).map((row) => ({
     sourceId: String(row.source_id), indicatorKey: String(row.indicator_key),
     value: Number(row.value), unit: String(row.unit), observedAt: String(row.observed_at),

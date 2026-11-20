@@ -36,7 +36,7 @@ export async function getMarketOverview(options: MarketOverviewOptions = {}): Pr
         select: "source_id,indicator_key,value,unit,observed_at,fetched_at,status",
         indicator_key: `eq.${key}`, order: "observed_at.desc", limit: "1",
       });
-      return get(`observations?${query.toString()}`);
+      return get(`observation_history?${query.toString()}`);
     });
     const [scoreRows, signalRows, ...observationResults] = await Promise.all([
       get("scores?select=score,regime,coverage,confidence,as_of,model_version_id,component_scores&order=as_of.desc&limit=1"),
