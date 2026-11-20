@@ -83,7 +83,8 @@ function dateTime(date: string | undefined, time: string | undefined): string | 
   const d = date.trim().replace(/[年/.]/g, "-").replace(/月/g, "-").replace(/日/g, "");
   const t = (time ?? "00:00:00").trim();
   const normalized = d.includes("T") ? d : `${d}T${t}`;
-  const hasTimezone = /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(normalized);\n  const parsed = new Date(hasTimezone ? normalized : `${normalized}+08:00`);
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+  const parsed = new Date(hasTimezone ? normalized : `${normalized}+08:00`);
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 function hash(value: string): string {
