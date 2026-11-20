@@ -161,6 +161,8 @@ def sync(args: argparse.Namespace) -> int:
                         continue
                     relative = safe_object_path(bucket_name, object_name)
                     destination = root / relative
+                    if not destination.resolve().is_relative_to(root):
+                        raise ValueError(f"Local backup path escapes its root: {bucket_name}/{object_name}")
                     signature = remote_signature(item)
                     key = f"{bucket_name}/{object_name}"
                     old = manifest["objects"].get(key, {})
