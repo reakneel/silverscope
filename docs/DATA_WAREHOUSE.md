@@ -1,54 +1,98 @@
-# SilverScope historical warehouse and ingestion operations
+# SilverScope data operations and historical warehouse
 
-## Data layers
+## Architecture
 
-- `observations` is the hot, idempotent ingestion table.
-- `observation_archive` is a monthly range-partitioned historical warehouse for rows older than 365 days.
-- `observation_history` is the server-only union view over hot and archived rows. Quant history readers use this view so archival does not silently remove history from research.
-- Research snapshots and experiment manifests remain append-only and retain their original source timestamps and hashes.
+- observations: online hot store for recent source observations.
+- observation_history: server-only view that unions the hot table and optional in-database monthly partitions.
+- Local cold archive: independently stored compressed CSV/JSON records containing the complete observation row, a PostgreSQL-computed row hash, SHA-256 manifest, row count and observation time bounds.
+- DuckDB can query the compressed local archive without loading the entire history into PostgreSQL.
 
-The archive remains in the same Supabase PostgreSQL database. Partitioning improves lifecycle management and time-bounded query pruning; **it does not reduce total Supabase database bytes by itself**. To reduce the primary database footprint later, export verified partitions to an independently managed object store and only then introduce an audited external-history query path. Do not delete source rows until that path has restore and parity tests.
+The local cold archive is the capacity-management boundary. The monthly PostgreSQL partition archive is not enabled by scheduled jobs and does not reduce database bytes. Vercel cannot prove that a backup on an operator's workstation exists, so the server-side archive endpoint is deliberately disabled (HTTP 410).
 
-## Archive policy
+## Cold archive and safe migration
 
-The scheduled endpoint moves rows with `observed_at` older than 365 days in bounded batches of 5,000 rows (up to 20 batches per run) into monthly partitions. The operation is transactional per batch and retains `observed_at`, `published_at`, `fetched_at`, source identifiers, confidence, status, quality flags and raw payload. It does not infer missing publication timestamps.
+Use scripts/db/cold-archive-observations.py. It requires PostgreSQL psql and a local SUPABASE_DB_URL.
 
-Apply the warehouse migration only after reconciling the existing migration history (see [MIGRATION_RECONCILIATION.md](./MIGRATION_RECONCILIATION.md)). After applying it, the protected route is:
+Default export is read-only. It exports rows older than 365 days to a timestamped .csv.gz file. Each record contains the original observation row and a PostgreSQL MD5 row fingerprint; the adjacent JSON manifest contains SHA-256, row count, cutoff and time bounds.
 
-- `POST /api/cron/warehouse/archive` — protected by `Authorization: Bearer CRON_SECRET`.
-- `npm run db:warehouse:archive` — manually invokes the configured app URL using `SILVERSCOPE_APP_URL` and `CRON_SECRET`.
+~~~powershell
+$env:SUPABASE_DB_URL = "your PostgreSQL connection URI"
+python ./scripts/db/cold-archive-observations.py --cutoff-days 365
+~~~
 
-## Automated ingestion
+Verify a previously created archive offline:
 
-The Vercel cron schedule is declared in `vercel.json`. It keeps Git-based automatic deployments disabled.
+~~~powershell
+python ./scripts/db/cold-archive-observations.py --verify-archive ".\backups\cold-observations\silverscope-observations-before-YYYYMMDDTHHMMSSZ.csv.gz"
+~~~
+
+Only after reviewing the archive and copying it to a second independent location, explicitly allow source-row deletion:
+
+~~~powershell
+python ./scripts/db/cold-archive-observations.py --cutoff-days 365 --apply-delete
+~~~
+
+The deletion transaction imports the exact archived ID/hash set into a temporary table and verifies:
+1. SHA-256 and gzip/CSV/JSON integrity before any database mutation.
+2. No duplicate observation IDs and exact exported row count.
+3. Every current source row still has the same ID and PostgreSQL-computed row hash.
+4. The complete currently eligible set still equals the exported set; new old-dated rows cause an abort.
+5. The number of deleted rows exactly equals the archive row count.
+
+Any mismatch raises an error and rolls back the transaction. No source rows are deleted in the default mode. The script never prunes local archive files.
+
+### Local restore drill
+
+Start a local Supabase stack with the matching migrations/schema, then restore into its local PostgreSQL database:
+
+~~~powershell
+npx supabase start
+$env:RESTORE_DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+python ./scripts/db/cold-archive-observations.py --restore-local ".\backups\cold-observations\silverscope-observations-before-YYYYMMDDTHHMMSSZ.csv.gz"
+~~~
+
+Restore refuses non-local hosts, inserts without overwriting conflicting dedupe keys, and verifies exact row hashes before commit. A conflict mismatch aborts and rolls back.
+
+### Query cold data with DuckDB
+
+Install DuckDB locally, then query the gzip CSV archive. The JSON record has the full source row under row:
+
+~~~sql
+SELECT
+  json_extract_string(archive_record, '$.row.indicator_key') AS indicator_key,
+  CAST(json_extract_string(archive_record, '$.row.observed_at') AS TIMESTAMPTZ) AS observed_at,
+  CAST(json_extract_string(archive_record, '$.row.value') AS DOUBLE) AS value
+FROM read_csv('backups/cold-observations/*.csv.gz');
+~~~
+
+For repeated analysis, materialize a compressed Parquet file from DuckDB after validating the input archive:
+
+~~~sql
+COPY (
+  SELECT
+    json_extract_string(archive_record, '$.row.indicator_key') AS indicator_key,
+    CAST(json_extract_string(archive_record, '$.row.observed_at') AS TIMESTAMPTZ) AS observed_at,
+    CAST(json_extract_string(archive_record, '$.row.value') AS DOUBLE) AS value,
+    archive_record
+  FROM read_csv('backups/cold-observations/*.csv.gz')
+) TO 'silver-observations-cold.parquet' (FORMAT PARQUET, COMPRESSION ZSTD);
+~~~
+
+Keep the original SHA-256 verified gzip archives as the canonical backup; Parquet is a derived analytics copy.
+
+## Automated collection and monitoring
+
+The Vercel cron schedule is declared in vercel.json; Git-triggered deployments remain disabled.
 
 | Job | Schedule (UTC) | Behaviour |
 |---|---|---|
-| Daily dispatcher | 22:00 every day | On weekdays pulls FRED; every day records source health and data-quality snapshots |
-| Weekly dispatcher | Friday 22:15 | Pulls CFTC COMEX standard Silver (084691) and archives eligible older observations |
+| Daily dispatcher | 22:00 daily | Weekday FRED ingestion, daily source-health and data-quality checks |
+| Weekly dispatcher | Friday 22:15 | CFTC COMEX standard Silver (084691) positioning ingestion |
 
-Vercel Cron sends the configured `CRON_SECRET` as a Bearer token. The two dispatcher jobs consolidate related work and keep the production schedule simple. Set the secret in the Production environment and redeploy for schedules to become active. The routes fail closed with 503 when secrets or the database are missing. Manual protected requests can use the same Bearer header.
+Cron jobs require Production CRON_SECRET, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and FRED credentials. Only FRED/CFTC public datasets are automated. CME inventory and licensed spot prices remain controlled imports until stable delivery and redistribution rights are established.
 
-Only FRED and CFTC are automated by this schedule. CME inventory and licensed spot prices remain controlled imports until stable, permitted source delivery and redistribution rights are established. No scraping or licensing bypass is introduced.
+Source-health and quality monitors persist recent status, exact publication timestamp coverage, unverified observation counts and ingestion acceptance/rejection rates. Missing published_at remains missing; it is never inferred from observed_at.
 
-## Data-quality semantics
+## Important distinction
 
-The quality monitor stores:
-- Observation count in the trailing 30 days.
-- Missing `published_at` count and the fraction with an exact publication timestamp.
-- Non-verified observation count.
-- Ingestion fetched/accepted/rejected totals and rejection ratio.
-
-A missing `published_at` is a point-in-time eligibility limitation, not a timestamp to synthesize from `observed_at`. The monitor reports this separately and never backfills a guessed publication time. Rejected ratio above 5% is marked degraded; zero recent observations is marked insufficient data. These are operational guardrails, not a substitute for source-specific scientific validation.
-
-Source-health thresholds are explicit operational monitoring windows in `lib/monitoring/source-cadence.ts`; they are not represented as official provider SLAs. License-blocked or disabled sources remain visible rather than being silently treated as healthy.
-
-## First-run checklist
-
-1. Reconcile and apply migrations in a staging Supabase project.
-2. Set Vercel Production `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` and `FRED_API_KEY`.
-3. Confirm CFTC source registry license status is `public_api` (the migration updates this known public dataset).
-4. Trigger FRED and CFTC routes manually once, inspect ingestion_runs and observations.
-5. Trigger source and quality monitor routes; verify rows in `source_health_checks`, `source_health_alerts` and `data_quality_checks`.
-6. Verify the `observation_history` view returns the same rows before and after a small staging archive test.
-7. Configure a local Supabase Storage backup separately; PostgreSQL database dumps do not include Storage object bytes.
+A local cold archive reduces Supabase database usage only after the operator explicitly runs the verified --apply-delete flow. Local copies do not automatically reduce Supabase Storage usage, and PostgreSQL dumps do not contain Storage object bytes. Keep database dumps, Storage object copies and cold observation archives as separate backup classes.
