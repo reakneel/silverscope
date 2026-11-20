@@ -27,7 +27,6 @@ export interface ExecutionFill {
 export interface FuturesEquityPoint {
   timestamp: string;
   equity: number;
-  cash: number;
   contracts: number;
   close: number;
   turnover: number;
@@ -100,13 +99,13 @@ export function simulateFuturesExecution(
     const tradedNotional = execute(bar.timestamp, bar.contractId, bar.open, target, "rebalance");
     equity += position * (bar.close - bar.open) * options.contractMultiplier;
     if (equity <= 0) throw new Error("Simulation equity reached zero or below.");
-    equityCurve.push({ timestamp: bar.timestamp, equity, cash: equity, contracts: position, close: bar.close, turnover: tradedNotional / Math.max(equity, 1e-12) });
+    equityCurve.push({ timestamp: bar.timestamp, equity, contracts: position, close: bar.close, turnover: tradedNotional / Math.max(equity, 1e-12) });
   }
   const last = bars[bars.length - 1];
   execute(last.timestamp, last.contractId, last.close, 0, "final_liquidation");
   if (equity <= 0) throw new Error("Final liquidation exhausted simulation equity.");
   const finalPoint = equityCurve[equityCurve.length - 1];
-  if (finalPoint) { finalPoint.equity = equity; finalPoint.cash = equity; finalPoint.contracts = 0; }
+  if (finalPoint) { finalPoint.equity = equity; finalPoint.contracts = 0; }
   return {
     initialCapital: options.initialCapital, finalEquity: equity, totalReturn: equity / options.initialCapital - 1,
     netPnl: equity - options.initialCapital, fills, equityCurve,
