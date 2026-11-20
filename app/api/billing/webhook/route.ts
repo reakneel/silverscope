@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       const existing = await supabaseAdminRequest(`stripe_webhook_events?event_id=eq.${encodeURIComponent(event.id)}&select=status&limit=1`);
       if (!existing.ok) return NextResponse.json({ error: "event_lookup_failed" }, { status: 503 });
       const rows = await existing.json();
+      if (!rows[0]) return NextResponse.json({ error: "event_claim_state_missing" }, { status: 503 });
       if (rows[0]?.status === "processed") return NextResponse.json({ received: true, duplicate: true });
       if (rows[0]?.status === "processing") return NextResponse.json({ error: "event_processing" }, { status: 409 });
       const retry = await supabaseAdminRequest(`stripe_webhook_events?event_id=eq.${encodeURIComponent(event.id)}`, {
