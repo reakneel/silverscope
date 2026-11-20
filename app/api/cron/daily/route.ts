@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     { name: "source_health", path: "/api/cron/monitor/sources" },
     { name: "data_quality", path: "/api/cron/monitor/quality" },
   ];
-  const results = await Promise.all(jobs.map(async (job) => {
+  const invoke = async (job: { name: string; path: string }) => {
     try {
       const response = await fetch(`${origin}${job.path}`, {
         method: "GET", headers: { Authorization: `Bearer ${secret}`, Accept: "application/json" },
@@ -27,7 +27,12 @@ export async function GET(request: Request) {
     } catch (error) {
       return { name: job.name, status: 0, ok: false, error: error instanceof Error ? error.message : "Unknown error" };
     }
-  }));
+  };
+  const ingestionJobs = jobs.filter((job) => job.name === "fred");
+  const monitorJobs = jobs.filter((job) => job.name !== "fred");
+  const ingestionResults = await Promise.all(ingestionJobs.map(invoke));
+  const monitorResults = await Promise.all(monitorJobs.map(invoke));
+  const results = [...ingestionResults, ...monitorResults];
   const failed = results.filter((result) => !result.ok);
   return NextResponse.json({
     status: failed.length ? "partial_failure" : "completed",
