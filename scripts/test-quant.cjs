@@ -14,6 +14,6 @@ execFileSync(process.execPath, [
 execFileSync(process.execPath, ["--test",
   "tests/quant.test.cjs", "tests/quality.test.cjs",
   "tests/fred-adapter.test.cjs", "tests/cftc-adapter.test.cjs",
-  "tests/supabase-rest.test.cjs", "tests/features.test.cjs",
+  "tests/supabase-rest.test.cjs", "tests/features.test.cjs", "tests/quant-pipeline.test.cjs",
 ], { stdio: "inherit" });
 fs.rmSync(output, { recursive: true, force: true });

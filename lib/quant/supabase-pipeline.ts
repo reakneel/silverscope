@@ -36,27 +36,27 @@ export async function fetchRecentObservations(options: PipelineOptions, limit = 
   }));
 }
 export async function persistQuantSnapshot(
-  options: PipelineOptions, score: CompositeScore, signal: SignalSnapshot,
-): Promise<{ scoreId: string; signalRows: number }> {
+  options: PipelineOptions, score: CompositeScore, signal: SignalSnapshot, snapshotKey: string,
+): Promise<{ scoreId: string; signalRows: number; snapshotKey: string }> {
   const rest = createRest(options);
-  const scoreRows = await rest("scores?on_conflict=model_version_id,as_of", "POST", {
-    model_version_id: score.modelVersion, score: score.score, regime: score.regime,
-    coverage: score.coverage, confidence: score.confidence, as_of: score.asOf,
-    input_snapshot: { acceptedInputKeys: score.acceptedInputKeys, rejectedInputs: score.rejectedInputs },
+  const scoreRows = await rest("scores?on_conflict=model_version_id,snapshot_key", "POST", {
+    model_version_id: score.modelVersion, snapshot_key: snapshotKey,
+    score: score.score, regime: score.regime, coverage: score.coverage, confidence: score.confidence,
+    as_of: score.asOf, input_snapshot: { snapshotKey, acceptedInputKeys: score.acceptedInputKeys, rejectedInputs: score.rejectedInputs },
     component_scores: score.components,
   }, "resolution=ignore-duplicates,return=representation") as SupabaseRow[] | null;
   let scoreId = scoreRows?.[0]?.id;
   if (!scoreId) {
-    const query = new URLSearchParams({ select: "id", model_version_id: `eq.${score.modelVersion}`, as_of: `eq.${score.asOf}`, limit: "1" });
+    const query = new URLSearchParams({ select: "id", model_version_id: `eq.${score.modelVersion}`, snapshot_key: `eq.${snapshotKey}`, limit: "1" });
     const existing = await rest(`scores?${query.toString()}`) as SupabaseRow[] | null;
     scoreId = existing?.[0]?.id;
   }
   if (!scoreId) throw new Error("Could not resolve persisted score snapshot ID.");
-  const signalRows = await rest("signals?on_conflict=model_version_id,signal_key,generated_at", "POST", [{
+  const signalRows = await rest("signals?on_conflict=model_version_id,signal_key,snapshot_key", "POST", [{
     score_id: scoreId, model_version_id: score.modelVersion, signal_key: signal.signalKey,
-    horizon: signal.horizon, direction: signal.direction, confidence: signal.confidence,
-    evidence: signal.evidence, invalidation_conditions: signal.invalidationConditions,
-    generated_at: signal.generatedAt,
+    snapshot_key: snapshotKey, horizon: signal.horizon, direction: signal.direction,
+    confidence: signal.confidence, evidence: signal.evidence,
+    invalidation_conditions: signal.invalidationConditions, generated_at: signal.generatedAt,
   }], "resolution=ignore-duplicates,return=representation") as unknown[] | null;
-  return { scoreId, signalRows: signalRows?.length ?? 0 };
+  return { scoreId, signalRows: signalRows?.length ?? 0, snapshotKey };
 }

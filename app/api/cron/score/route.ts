@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { DEFAULT_SCORE_POLICY, calculateCompositeScore } from "@/lib/quant/engine";
 import { buildFeatureSignals, parseFeatureCalibrations } from "@/lib/quant/features";
@@ -11,9 +11,7 @@ export async function GET(request: Request) {
   if (!secret) return NextResponse.json({ error: "cron_not_configured" }, { status: 503 });
   const provided = Buffer.from(request.headers.get("authorization") ?? "");
   const expected = Buffer.from(`Bearer ${secret}`);
-  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!baseUrl || !serviceRoleKey) return NextResponse.json({ error: "database_not_configured" }, { status: 503 });
@@ -37,7 +35,14 @@ export async function GET(request: Request) {
     }, { status: 200 });
     const signal = buildSignalSnapshot(score);
     if (!signal) return NextResponse.json({ error: "signal_generation_failed" }, { status: 500 });
-    const persisted = await persistQuantSnapshot({ baseUrl, serviceRoleKey }, score, signal);
+    const canonicalInputs = features.slice().sort((a, b) => a.key.localeCompare(b.key)).map((feature) => ({
+      key: feature.key, group: feature.group, score: feature.score, confidence: feature.confidence,
+      observedAt: feature.observedAt, status: feature.status, sourceId: feature.sourceId,
+    }));
+    const snapshotKey = createHash("sha256").update(JSON.stringify({
+      modelVersion: score.modelVersion, calibrations, inputs: canonicalInputs,
+    })).digest("hex");
+    const persisted = await persistQuantSnapshot({ baseUrl, serviceRoleKey }, score, signal, snapshotKey);
     return NextResponse.json({ status: "scored", ...persisted, score, signal, skipped });
   } catch (error) {
     return NextResponse.json({ error: "quant_pipeline_failed", message: error instanceof Error ? error.message : "Unknown error" }, { status: 502 });
