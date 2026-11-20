@@ -62,6 +62,9 @@ Open http://localhost:3000.
 - lib/research/scenario-analysis.ts — multi-contract price-shock stress tests and execution-cost sensitivity analysis
 - lib/research/portfolio-execution.ts — shared-equity multi-contract execution, volume-limited persistent target orders, margin admission and liquidation
 - lib/monitoring/source-health.ts — explicit-cadence freshness, ingestion failure classification and alert summaries
+- lib/auth/supabase-session.ts — secure HttpOnly Supabase auth sessions and token refresh
+- lib/billing/entitlements.ts — fail-closed plan entitlements
+- lib/billing/stripe-webhook.ts — timestamp-bound Stripe signature verification
 - lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 

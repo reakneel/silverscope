@@ -55,11 +55,15 @@
 - [ ] Wire scheduled health polling, persisted alert state and email / in-app delivery
 
 ## P2 — Accounts and paid product
-- [ ] Supabase Auth and protected dashboard
-- [ ] Server-side entitlement checks
-- [ ] Stripe products, checkout and customer portal
-- [ ] Signature-verified Stripe webhooks
-- [ ] Free / Pro / Ultra feature matrix
+- [x] Add Supabase password login/logout and secure HttpOnly session refresh endpoints
+- [ ] Enforce authentication on all protected dashboard pages and user-owned API resources
+- [x] Add server-side Free / Pro / Ultra entitlement resolver
+- [x] Add authenticated Stripe subscription checkout endpoint with configured Price IDs
+- [x] Add authenticated Stripe customer portal session endpoint
+- [ ] Configure Stripe products/prices and customer portal settings in the provider account
+- [x] Add timestamp-bound, signature-verified, idempotent Stripe subscription webhooks
+- [x] Add Free / Pro / Ultra feature entitlement matrix
+- [ ] Apply migrations 0006 and 0007 after provisioning Supabase
 - [ ] Email / in-app alerts
 - [ ] Admin source-health dashboard
 - [ ] Privacy, terms, refund and risk disclosures
@@ -73,8 +77,8 @@
 - [x] Add non-overlapping out-of-sample walk-forward report aggregation with explicit calendar-gap handling
 - [x] Add Bonferroni family-wise multiple-testing correction helper
 - [ ] Full strategy simulation and walk-forward performance reports
-- [ ] Transaction costs and slippage
-- [ ] Benchmark and risk metrics
+- [x] Add configurable commissions and slippage to futures execution and cost-aware backtest metrics
+- [x] Add benchmark, volatility, drawdown, Sharpe and Sortino metrics
 - [x] Add multi-contract price-shock stress analysis with margin shortfall reporting
 - [x] Add transaction-cost sensitivity analysis over explicit turnover and cost assumptions
 - [ ] Add empirically calibrated liquidity / market-impact sensitivity ranges
