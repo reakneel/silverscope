@@ -15,7 +15,7 @@ function parsePosition(value: string | number | undefined): number | null {
   if (value === undefined || value === null) return null;
   const raw = String(value).trim();
   if (!raw || raw === "." || !/^-?\d[\d,]*(?:\.\d+)?$/.test(raw)) return null;
-  const parsed = Number(raw.replaceAll(",", ""));
+  const parsed = Number(raw.replace(/,/g, ""));
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 export class CftcSilverAdapter implements SourceAdapter {
