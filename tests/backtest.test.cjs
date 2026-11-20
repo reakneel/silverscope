@@ -13,7 +13,7 @@ test("calculates net returns, drawdown, risk and benchmark metrics", () => {
   assert.equal(metrics.periods, 2);
   assert.ok(metrics.netEquity[1] < 110);
   assert.ok(metrics.maxDrawdown > 0.1);
-  assert.equal(metrics.benchmarkReturn, 0.1);
+  assert.ok(Math.abs(metrics.benchmarkReturn - 0.1) < 1e-9);
   assert.equal(metrics.assumptions.tradingCostBps, 10);
   assert.ok(metrics.sharpeRatio !== null);
 });
