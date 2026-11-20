@@ -32,13 +32,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const experiment = body?.experiment;
     const decisionTime = body?.decisionTime;
-    if (!experiment || typeof experiment !== "object" || typeof decisionTime !== "string" || !Number.isFinite(Date.parse(decisionTime))) {
+    if (!experiment || typeof experiment !== "object" || typeof decisionTime !== "string" || !Number.isFinite(Date.parse(decisionTime)) ||
+        !experiment.parameters || typeof experiment.parameters !== "object" || Array.isArray(experiment.parameters) ||
+        !experiment.assumptions || typeof experiment.assumptions !== "object" || Array.isArray(experiment.assumptions)) {
       return NextResponse.json({ error: "invalid_research_request" }, { status: 400 });
     }
     if (JSON.stringify(experiment.parameters ?? {}).length > 16000 || JSON.stringify(experiment.assumptions ?? {}).length > 16000) {
       return NextResponse.json({ error: "experiment_configuration_too_large" }, { status: 413 });
     }
     const decisionIso = new Date(decisionTime).toISOString();
+    if (Date.parse(decisionIso) > Date.now()) return NextResponse.json({ error: "decision_time_in_future" }, { status: 400 });
     const cutoff = encodeURIComponent(decisionIso);
     const query = [
       "select=source_id,indicator_key,value,unit,observed_at,published_at,fetched_at,confidence,status,source_url,source_record_id",
@@ -64,7 +67,7 @@ export async function POST(request: Request) {
     const snapshot = createResearchSnapshot({
       datasetId: `verified-observations-asof:${decisionIso}`, decisionTime: decisionIso,
       modelVersion: manifest.modelVersion, strategyVersion: manifest.strategyVersion,
-      parameters: manifest.parameters, assumptions: manifest.assumptions, observations,
+      parameters: experiment.parameters, assumptions: experiment.assumptions, observations,
     });
     const experimentId = `${user.id}:${manifest.manifestSha256.slice(0, 32)}`;
     const savedExperiment = await supabaseAdminRequest("research_experiments?on_conflict=owner_id,manifest_sha256", {
