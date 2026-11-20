@@ -67,7 +67,7 @@
 - [ ] Configure Stripe products/prices and customer portal settings in the provider account
 - [x] Add timestamp-bound, signature-verified, idempotent Stripe subscription webhooks
 - [x] Add Free / Pro / Ultra feature entitlement matrix
-- [ ] Reconcile duplicate migration version prefix 0006 before applying migrations
+- [ ] Reconcile duplicate migration version prefix 0006 against actual remote history before applying migrations
 - [ ] Apply all pending migrations to staging and production after reconciliation
 - [ ] Email / in-app alerts
 - [ ] Admin source-health dashboard
@@ -79,10 +79,13 @@
 - [x] Add append-only Supabase schema and owner-scoped RLS for experiment manifests, run snapshots and artifacts
 - [ ] Reconcile duplicate 0006 version prefixes and apply the complete migration history after verifying remote state
 - [x] Add monthly partitioned historical observation archive and a unified hot/archive history view
-- [x] Add protected bounded-batch warehouse archival endpoint
+- [x] Add protected bounded-batch partition archive SQL with exact conflict parity checks
+- [x] Disable automatic server-side archival until an independent local backup is verified
 - [x] Add incremental local Supabase Storage backup with object SHA-256 manifests
 - [x] Add scheduled FRED/CFTC ingestion and source-health/data-quality snapshots
-- [ ] Build a persistent historical data store and reproducible dataset snapshots
+- [x] Add verified local cold observation archive with row-hash parity, SHA-256 manifests and opt-in deletion
+- [x] Add local-only cold archive restore and DuckDB query workflow
+- [ ] Build reproducible point-in-time dataset snapshots from cold archive
 - [x] Add non-overlapping out-of-sample walk-forward report aggregation with explicit calendar-gap handling
 - [x] Add Bonferroni family-wise multiple-testing correction helper
 - [ ] Full strategy simulation and walk-forward performance reports
