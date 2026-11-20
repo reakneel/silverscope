@@ -10,7 +10,7 @@ SilverScope is a silver-market intelligence and quantitative research SaaS. It o
 - FRED macro adapter: DFII10, DTWEXBGS and DGS10 (API key required)
 - CFTC Disaggregated Futures Only adapter for COMEX standard Silver managed-money net positions
 - Supabase Postgres schema, RLS and server-side REST persistence (requires project credentials)
-- Planned: licensed COMEX/LBMA/spot feeds, Python research/backtesting workers, Stripe
+- Planned: automated licensed market-data feeds, Python research/backtesting workers, Stripe
 
 ## Run locally
 ```bash
@@ -30,6 +30,7 @@ Open http://localhost:3000.
 - /api/health — Application configuration status
 - /api/cron/ingest/fred — Protected FRED macro ingestion endpoint
 - /api/cron/ingest/cftc — Protected CFTC Silver positioning ingestion endpoint
+- /api/cron/ingest/cme-comex — Protected POST endpoint for importing a converted CME Silver Stocks CSV
 - /api/cron/calibration/preview — Protected historical calibration preview; does not activate parameters
 - /api/cron/score — Protected calibration-gated score and signal snapshot endpoint
 
@@ -40,6 +41,7 @@ Open http://localhost:3000.
 - lib/data/market-overview.ts — server-only reads for latest stored observations, score and signal
 - lib/ingestion/fred-adapter.ts — DFII10, DTWEXBGS and DGS10
 - lib/ingestion/cftc-adapter.ts — CFTC Disaggregated Futures Only, standard COMEX Silver contract 084691
+- lib/ingestion/cme-inventory-csv.ts — strict COMEX registered / eligible / total warehouse stock CSV parser
 - lib/ingestion/runner.ts — adapter execution and validation
 - lib/ingestion/supabase-rest.ts — idempotent server-side observation persistence
 - lib/quant/engine.ts — versioned, coverage-aware composite scoring
