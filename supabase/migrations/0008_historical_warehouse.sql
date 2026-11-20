@@ -19,7 +19,7 @@ create table if not exists public.observation_archive (
   created_at timestamptz not null,
   archived_at timestamptz not null default now(),
   primary key (id, observed_at),
-  unique (source_id, indicator_key, observed_at)
+  unique (dedupe_key, observed_at)
 ) partition by range (observed_at);
 
 create index if not exists observation_archive_indicator_time_idx
@@ -62,6 +62,7 @@ declare
   v_last_month date;
   v_moved bigint := 0;
   v_batch bigint := 0;
+  v_candidates bigint := 0;
   v_iteration integer;
 begin
   perform pg_advisory_xact_lock(hashtext('silverscope:archive_old_observations'));
@@ -76,7 +77,7 @@ begin
       select observed_at
       from public.observations
       where observed_at < p_before
-      order by observed_at asc
+      order by observed_at asc, id asc
       limit p_batch_size
     ) batch;
 
@@ -88,31 +89,63 @@ begin
       v_month := (v_month + interval '1 month')::date;
     end loop;
 
-    with moved as (
-      delete from public.observations
-      where id in (
-        select id from public.observations
-        where observed_at < p_before
-        order by observed_at asc
-        limit p_batch_size
-        for update skip locked
+    with candidates as materialized (
+      select *
+      from public.observations
+      where observed_at < p_before
+      order by observed_at asc, id asc
+      limit p_batch_size
+      for update skip locked
+    ),
+    inserted as (
+      insert into public.observation_archive (
+        id, source_id, indicator_key, value, unit, observed_at, published_at,
+        fetched_at, confidence, status, source_url, source_record_id, dedupe_key,
+        quality_flags, raw_payload, created_at
       )
-      returning id, source_id, indicator_key, value, unit, observed_at,
-        published_at, fetched_at, confidence, status, source_url, source_record_id,
-        dedupe_key, quality_flags, raw_payload, created_at
+      select id, source_id, indicator_key, value, unit, observed_at, published_at,
+        fetched_at, confidence, status, source_url, source_record_id, dedupe_key,
+        quality_flags, raw_payload, created_at
+      from candidates
+      on conflict (dedupe_key, observed_at) do nothing
+      returning id, dedupe_key, observed_at
+    ),
+    verified as (
+      select c.id
+      from candidates c
+      join inserted i on i.dedupe_key = c.dedupe_key and i.observed_at = c.observed_at
+      union all
+      select c.id
+      from candidates c
+      join public.observation_archive a
+        on a.dedupe_key = c.dedupe_key and a.observed_at = c.observed_at
+      where row(
+        a.id, a.source_id, a.indicator_key, a.value, a.unit, a.observed_at,
+        a.published_at, a.fetched_at, a.confidence, a.status, a.source_url,
+        a.source_record_id, a.dedupe_key, a.quality_flags, a.raw_payload, a.created_at
+      ) is not distinct from row(
+        c.id, c.source_id, c.indicator_key, c.value, c.unit, c.observed_at,
+        c.published_at, c.fetched_at, c.confidence, c.status, c.source_url,
+        c.source_record_id, c.dedupe_key, c.quality_flags, c.raw_payload, c.created_at
+      )
+      and not exists (
+        select 1 from inserted i
+        where i.dedupe_key = c.dedupe_key and i.observed_at = c.observed_at
+      )
+    ),
+    deleted as (
+      delete from public.observations o
+      using verified v
+      where o.id = v.id
+      returning o.id
     )
-    insert into public.observation_archive (
-      id, source_id, indicator_key, value, unit, observed_at, published_at,
-      fetched_at, confidence, status, source_url, source_record_id, dedupe_key,
-      quality_flags, raw_payload, created_at
-    )
-    select id, source_id, indicator_key, value, unit, observed_at, published_at,
-      fetched_at, confidence, status, source_url, source_record_id, dedupe_key,
-      quality_flags, raw_payload, created_at
-    from moved
-    on conflict (source_id, indicator_key, observed_at) do nothing;
+    select (select count(*) from candidates), (select count(*) from deleted)
+      into v_candidates, v_batch;
 
-    get diagnostics v_batch = row_count;
+    if v_batch <> v_candidates then
+      raise exception 'Archive verification failed: % candidate rows, % safely archived and deleted. Source rows were retained by transaction rollback.',
+        v_candidates, v_batch;
+    end if;
     v_moved := v_moved + v_batch;
     exit when v_batch = 0;
   end loop;
