@@ -15,7 +15,6 @@ export async function GET(request: Request) {
     ...(weekday ? [{ name: "fred", path: "/api/cron/ingest/fred" }] : []),
     { name: "source_health", path: "/api/cron/monitor/sources" },
     { name: "data_quality", path: "/api/cron/monitor/quality" },
-    { name: "warehouse_archive", path: "/api/cron/warehouse/archive" },
   ];
   const results = await Promise.all(jobs.map(async (job) => {
     try {
@@ -33,7 +32,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     status: failed.length ? "partial_failure" : "completed",
     checkedAt: new Date().toISOString(), scheduledJobs: results.length, failedJobs: failed.length, results,
-    note: "FRED runs on weekdays; monitoring and bounded warehouse archival run daily.",
+    note: "FRED runs on weekdays; source-health and data-quality monitoring run daily.",
   }, { status: failed.length ? 502 : 200, headers: { "Cache-Control": "no-store" } });
 }
 export const POST = GET;
