@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "csv_content_type_required" }, { status: 415 });
   }
   const csv = await request.text();
-  if (!csv.trim() || csv.length > 2_000_000) {
+  if (!csv.trim() || Buffer.byteLength(csv, "utf8") > 2_000_000) {
     return NextResponse.json({ error: "invalid_csv_size", maximumBytes: 2_000_000 }, { status: 413 });
   }
   const result = await runIngestion(new LicensedSilverPriceCsvAdapter(csv, { providerName, sourceUrl }), {
@@ -43,6 +43,12 @@ export async function POST(request: Request) {
   }
   try {
     const persisted = await persistIngestionResult(result, { baseUrl, serviceRoleKey });
+    const metadataResponse = await fetch(`${baseUrl.replace(/\\/$/, "")}/rest/v1/data_sources?id=eq.licensed-market-data`, {
+      method: "PATCH", cache: "no-store",
+      headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ name: providerName, source_url: sourceUrl, license_status: "licensed", enabled: true }),
+    });
+    if (!metadataResponse.ok) throw new Error(`Could not persist licensed provider metadata (HTTP ${metadataResponse.status}).`);
     return NextResponse.json({
       ...persisted, fetchedObservations: result.fetchedCount,
       rejectedObservations: result.rejectedCount, completedAt: result.completedAt,
