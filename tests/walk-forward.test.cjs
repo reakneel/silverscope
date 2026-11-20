@@ -7,7 +7,7 @@ const rows = Array.from({ length: 12 }, (_, index) => ({
 
 test("creates expanding folds with an embargo gap and no train/test leakage", () => {
   const folds = createWalkForwardFolds(rows, { minimumTrainSize: 4, testSize: 2, stepSize: 2, embargoSize: 1 });
-  assert.equal(folds.length, 4);
+  assert.equal(folds.length, 3);
   assert.equal(folds[0].train.length, 4);
   assert.equal(folds[0].test.length, 2);
   assert.ok(Date.parse(folds[0].trainEnd) < Date.parse(folds[0].testStart));
