@@ -155,7 +155,7 @@ def restore_archive(database_url: str, archive_path: Path) -> None:
         copy_path = psql_copy_path(plain)
         sql = f"""BEGIN;
 CREATE TEMP TABLE _silverscope_archive_rows(row_json jsonb NOT NULL) ON COMMIT DROP;
-\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
+\\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
 INSERT INTO public.observations
 SELECT (jsonb_populate_record(NULL::public.observations, row_json->'row')).*
 FROM _silverscope_archive_rows
