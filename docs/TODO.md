@@ -13,6 +13,8 @@
 - [x] Add idempotent Supabase REST persistence path
 - [x] Add CFTC COMEX Silver positioning adapter and protected ingestion endpoint
 - [x] Add calibration-gated feature, score and signal snapshot pipeline
+- [x] Add stable input-fingerprint idempotency for score/signal snapshots
+- [x] Add server-side dashboard, indicator and signal data reads
 - [ ] Apply migrations to a provisioned Supabase project
 - [ ] Verify production credentials and run controlled ingestion
 
@@ -25,15 +27,16 @@
 - [x] Add FRED source adapter for DFII10, DTWEXBGS and DGS10
 - [x] Add CFTC disaggregated futures-only COMEX Silver managed-money net adapter
 - [x] Add protected ingestion routes and deduplicated observation persistence
+- [x] Add calibration preview from verified historical observations
 - [x] Add calibration-driven feature generation and signal evidence snapshots
-- [x] Add score/signal snapshot idempotency constraints
+- [x] Add server-rendered latest observation and signal display
 - [ ] Provision Supabase project and environments
 - [ ] Configure FRED API key and cron secret
-- [ ] Verify CFTC Silver API ingestion against live Supabase
+- [ ] Run controlled CFTC Silver API ingestion and historical backfill
+- [ ] Review calibration window and activate validated parameters
 - [ ] Implement one verified silver spot source
 - [ ] Implement COMEX warehouse inventory ingestion
 - [ ] Add LBMA holdings and vault data adapter
-- [ ] Persist empirical calibration and model-version governance
 - [ ] Add integration tests against a staging database
 
 ## P2 — Accounts and paid product

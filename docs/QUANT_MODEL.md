@@ -10,10 +10,12 @@ The initial composite model is a transparent research hypothesis, not a validate
 4. Apply freshness, confidence, status and duplicate checks.
 5. Aggregate features by group and combine available groups using configured weights.
 6. Publish a regime classification only when minimum coverage, group count and confidence requirements are met.
-7. Persist score and evidence-linked signal snapshots idempotently.
+7. Persist score and evidence-linked signal snapshots with a stable input fingerprint, so repeated scheduled runs are idempotent.
 
 ## Calibration
-The pipeline requires `SILVER_FEATURE_CALIBRATION_JSON`. Each entry has `indicatorKey`, `group`, `mean`, `standardDeviation` and `direction` (1 or -1). Parameters must be estimated from a documented historical training window, appropriate frequency and point-in-time data. Do not copy illustrative values into production. Until calibration is supplied, score generation returns `calibration_required`.
+The pipeline requires `SILVER_FEATURE_CALIBRATION_JSON`. Each entry has `indicatorKey`, `group`, `mean`, `standardDeviation` and `direction` (1 or -1). Parameters must be estimated from a documented historical training window, appropriate frequency and point-in-time data. Do not copy illustrative values into production.
+
+The protected `/api/cron/calibration/preview` endpoint derives candidate means and sample standard deviations from verified stored observations, with a minimum of 52 samples per indicator. It is a review aid only: it does not select a training window, account for structural breaks, or prevent look-ahead leakage. Review the output and choose a point-in-time calibration window before activation.
 
 Example schema only (values are deliberately placeholders and must not be deployed):
 ```json
