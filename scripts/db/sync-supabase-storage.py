@@ -104,11 +104,41 @@ class StorageClient:
             raise RuntimeError(f"Unexpected object-list response for bucket {bucket}.")
         return result
 
-    def download(self, bucket: str, object_name: str) -> bytes:
+    def download_to(self, bucket: str, object_name: str, destination: Path) -> tuple[str, int]:
         bucket_path = urllib.parse.quote(bucket, safe="")
         object_path = urllib.parse.quote(object_name, safe="/")
-        return self.request(f"/storage/v1/object/{bucket_path}/{object_path}")
-
+        request = urllib.request.Request(
+            self.base_url + f"/storage/v1/object/{bucket_path}/{object_path}",
+            headers=self.headers,
+            method="GET",
+        )
+        last_error: Exception | None = None
+        for attempt in range(4):
+            try:
+                digest = hashlib.sha256()
+                size = 0
+                with urllib.request.urlopen(request, timeout=API_TIMEOUT) as response, destination.open("wb") as stream:
+                    while True:
+                        chunk = response.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        stream.write(chunk)
+                        digest.update(chunk)
+                        size += len(chunk)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                return digest.hexdigest(), size
+            except urllib.error.HTTPError as exc:
+                last_error = exc
+                if exc.code not in (429, 500, 502, 503, 504) or attempt == 3:
+                    detail = exc.read(300).decode("utf-8", "replace")
+                    raise RuntimeError(f"Supabase Storage download HTTP {exc.code}: {detail}") from exc
+            except (urllib.error.URLError, TimeoutError) as exc:
+                last_error = exc
+                if attempt == 3:
+                    raise RuntimeError(f"Supabase Storage download failed: {exc}") from exc
+            time.sleep(2 ** attempt)
+        raise RuntimeError(f"Supabase Storage download failed: {last_error}")
 
 def atomic_json(path: Path, value: Any) -> None:
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, prefix=".manifest-", suffix=".partial", delete=False) as stream:
@@ -184,17 +214,20 @@ def sync(args: argparse.Namespace) -> int:
                         print(f"WOULD DOWNLOAD {key}")
                         continue
                     destination.parent.mkdir(parents=True, exist_ok=True)
-                    payload = client.download(bucket_name, object_name)
                     with tempfile.NamedTemporaryFile("wb", dir=destination.parent, prefix=".object-", suffix=".partial", delete=False) as stream:
                         temporary = Path(stream.name)
-                        stream.write(payload)
-                        stream.flush()
-                        os.fsync(stream.fileno())
-                    os.replace(temporary, destination)
-                    digest = sha256_file(destination)
+                    try:
+                        digest, downloaded_size = client.download_to(bucket_name, object_name, temporary)
+                        expected_size = (item.get("metadata") or {}).get("size")
+                        if expected_size is not None and int(expected_size) != downloaded_size:
+                            raise RuntimeError(f"Downloaded size mismatch for {key}: expected {expected_size}, got {downloaded_size}")
+                        os.replace(temporary, destination)
+                    except Exception:
+                        temporary.unlink(missing_ok=True)
+                        raise
                     manifest["objects"][key] = {
                         "remoteSignature": signature, "sha256": digest,
-                        "size": len(payload), "updatedAt": item.get("updated_at"),
+                        "size": downloaded_size, "updatedAt": item.get("updated_at"),
                         "createdAt": item.get("created_at"),
                         "contentType": (item.get("metadata") or {}).get("mimetype"),
                     }
