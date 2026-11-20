@@ -64,6 +64,7 @@ declare
   v_batch bigint := 0;
   v_iteration integer;
 begin
+  perform pg_advisory_xact_lock(hashtext('silverscope:archive_old_observations'));
   if p_before is null then raise exception 'p_before is required'; end if;
   if p_batch_size < 1 or p_batch_size > 20000 then raise exception 'p_batch_size must be between 1 and 20000'; end if;
   if p_max_batches < 1 or p_max_batches > 100 then raise exception 'p_max_batches must be between 1 and 100'; end if;
