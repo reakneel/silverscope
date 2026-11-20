@@ -44,7 +44,7 @@ Open http://localhost:3000.
 - lib/quant/features.ts — calibrated raw-observation to normalized-feature conversion
 - lib/quant/signals.ts — evidence-backed regime snapshot generation
 - lib/quant/supabase-pipeline.ts — historical observation retrieval and idempotent score persistence
-- supabase/migrations/ — relational schema, seeds, RLS and snapshot idempotency
+- supabase/migrations/ — relational schema, seeds, RLS and input-fingerprint snapshot idempotency
 
 The score engine accepts normalized feature scores, not raw market values in incompatible units. It withholds output when minimum coverage, group count or confidence requirements are not met. Empirical calibration is required; the endpoint will not manufacture calibration values.
 

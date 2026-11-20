@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       observedAt: feature.observedAt, status: feature.status, sourceId: feature.sourceId,
     }));
     const snapshotKey = createHash("sha256").update(JSON.stringify({
-      modelVersion: score.modelVersion, calibrations, inputs: canonicalInputs,
+      modelVersion: score.modelVersion, calibrations: calibrations.slice().sort((a, b) => a.indicatorKey.localeCompare(b.indicatorKey)), inputs: canonicalInputs,
     })).digest("hex");
     const persisted = await persistQuantSnapshot({ baseUrl, serviceRoleKey }, score, signal, snapshotKey);
     return NextResponse.json({ status: "scored", ...persisted, score, signal, skipped });

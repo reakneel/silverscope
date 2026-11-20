@@ -19,7 +19,7 @@ The CFTC adapter reads the official Disaggregated Futures Only Socrata dataset `
 - Authorization header: `Bearer $CRON_SECRET`
 - Required server environment: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `SILVER_FEATURE_CALIBRATION_JSON`
 - Calibration JSON must contain empirically estimated parameters. An absent/invalid calibration returns a configuration error; insufficient coverage returns an explicit non-scored response.
-- Scores and signals are persisted with unique idempotency keys so retries do not create duplicate snapshots.
+- Scores and signals are persisted with a SHA-256 fingerprint of model version, calibration and normalized inputs, so scheduled retries do not create duplicate snapshots.
 
 ## Operational notes
 Apply migrations in numerical order. Use a staging project first. Start with a narrow historical backfill and verify counts, timestamps, units, duplicate behavior and source status before scheduling production jobs. Keep secrets server-side. Do not schedule ingestion until the source access terms and retention requirements are reviewed.
