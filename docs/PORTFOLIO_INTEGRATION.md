@@ -160,3 +160,26 @@ Merged into SilverScope main:
 8. Keep portfolio-console unarchived until production acceptance and an explicit user sign-off.
 
 No production database cleanup, migration, data ingestion, backup/restore, deployment, or portfolio-console archival is claimed as completed by this code status.
+
+
+## Provider-agnostic analytics engine
+
+The portfolio calculation layer consumes canonical observations and events, not broker-specific column names. Provider adapters should map source data into these canonical inputs; missing optional inputs reduce confidence/completeness rather than disabling unrelated calculations.
+
+Implemented in `lib/portfolio/performance.ts`:
+- Time-weighted return (TWR) with external-flow adjustment at observation-period boundaries.
+- Modified Dietz return for periods without exact intraperiod NAV.
+- Money-weighted annualized return (XIRR), solved with bounded bisection.
+- FIFO realized P&L with buy fees capitalized and sell fees/taxes deducted.
+- Periodic and cumulative flow-adjusted performance series.
+- Annualized volatility, Sharpe, Sortino, and benchmark beta.
+
+Calculation conventions:
+- All values in one calculation must be in the same reporting currency. FX conversion is a separate, timestamped input transformation.
+- TWR uses cash flows as period-end adjustments unless the caller supplies finer NAV observations. Modified Dietz supports explicit flow weights.
+- XIRR requires dated signed cash flows; the ending portfolio value is represented as a positive terminal flow.
+- FIFO is the default realized-cost convention here; jurisdiction/accounting-specific tax lots (specific identification, average cost, tax treatment) must remain selectable future policies.
+- Risk metrics require aligned return observations and a declared sampling frequency; annualization defaults to 252 periods and should be changed for weekly/monthly series.
+- Metrics return null when mathematically undefined or insufficiently observed. They do not synthesize missing prices, cash, FX, or NAV.
+
+This engine is source-neutral by design. Huatai, 同花顺, 雪球 and future API/CSV/XLSX adapters should normalize into the same canonical contracts. A social/model portfolio remains a distinct portfolio identity; it is not merged into a broker account merely because the symbols overlap.
