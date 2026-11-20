@@ -8,6 +8,8 @@
 - `sizeFuturesPosition`: conservative integer contract sizing from equity risk budget, stop distance, maximum position and optional initial-margin cap.
 - `simulateVolumeConstrainedOrder`: market-order fills capped by a configured fraction of each bar's reported volume; unfilled quantity is returned explicitly.
 - `calculatePortfolioRisk`: multi-contract gross/net notional, additive initial/maintenance margin, risk-group concentration and configurable account-limit checks.
+- `createResearchSnapshot`: canonical SHA-256 input snapshots with strict point-in-time availability and provenance validation.
+- `createExperimentManifest`: versioned, content-addressed experiment definitions.
 - `buildPointInTimeFeatureSignals`: strict historical feature construction requiring verified observations with known publication timestamps no later than the decision time.
 
 These are deterministic research primitives. They do not establish that a strategy is profitable or reproduce a complete exchange matching engine.
@@ -21,6 +23,12 @@ A contract change requires an explicit `rollFromPrice` representing the old cont
 Initial and maintenance margin rates are optional but must be supplied together. Initial margin is checked before increasing/opening a position. Equity is checked against maintenance margin after each bar mark; if breached, the simulator liquidates at that bar's close with configured slippage and commission. These are simplified percentage-of-notional assumptions, not exchange-specific SPAN or broker house-margin rules.
 
 The position-sizing helper estimates risk as stop distance multiplied by contract multiplier. It floors to whole contracts and applies both risk-budget and initial-margin constraints. It does not guarantee the stop can execute at its stated price; gaps and liquidity can cause larger losses.
+
+## Immutable research snapshots and experiment manifests
+
+A research snapshot is identified by a SHA-256 hash over canonical JSON containing the dataset identifier, decision time, model and strategy versions, parameters, assumptions and sorted observation records. Object keys are sorted before serialization; non-finite and non-JSON values are rejected. Only verified observations with known publication timestamps and observed/published/fetched times no later than the decision time are accepted. Missing publication timestamps are rejected rather than inferred. Snapshot identity is deterministic and excludes wall-clock creation time.
+
+Migration `0006_research_snapshots.sql` adds append-only experiment manifests, run snapshots and JSON artifacts. RLS scopes reads and inserts to the owning authenticated user (or admin); no update/delete policies are defined. Apply the migration only after a Supabase project is provisioned. The application does not claim that database persistence is active until credentials and migrations are configured.
 
 ## Partial-fill and portfolio-risk assumptions
 
