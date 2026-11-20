@@ -212,9 +212,11 @@ def create_archive(args: argparse.Namespace) -> Path:
         root.chmod(0o700)
     except OSError:
         pass
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     archive_path = root / f"silverscope-observations-before-{stamp}.csv.gz"
     partial_path = Path(str(archive_path) + ".partial")
+    if archive_path.exists() or Path(str(archive_path) + ".json").exists():
+        raise RuntimeError(f"Refusing to overwrite an existing cold archive: {archive_path}")
     query = (
         "COPY (SELECT jsonb_build_object('row_hash', md5(to_jsonb(o)::text), "
         "'row', to_jsonb(o))::text AS archive_record "
