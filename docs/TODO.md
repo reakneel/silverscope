@@ -56,7 +56,7 @@
 
 ## P3 — Research quality
 - [ ] Historical data store and reproducible snapshots
-- [ ] Walk-forward backtesting framework
+- [ ] Full strategy simulation and walk-forward performance reports
 - [ ] Transaction costs and slippage
 - [ ] Benchmark and risk metrics
 - [ ] Scenario analysis and sensitivity
