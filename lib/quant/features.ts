@@ -39,6 +39,12 @@ export function buildFeatureSignals(
   const features: FeatureSignal[] = [];
   const skipped: Array<{ indicatorKey: string; reason: string }> = [];
   for (const calibration of calibrations) {
+    // COMEX total is mechanically registered + eligible; keep it displayable as an observation,
+    // but never count it as a third independent inventory input in composite coverage.
+    if (calibration.indicatorKey === "comex_total_stocks") {
+      skipped.push({ indicatorKey: calibration.indicatorKey, reason: "derived_not_independent" });
+      continue;
+    }
     const observation = latest.get(calibration.indicatorKey);
     if (!observation) { skipped.push({ indicatorKey: calibration.indicatorKey, reason: "no_observation" }); continue; }
     const score = normalizeZScore(observation.value, calibration.mean, calibration.standardDeviation, calibration.direction);
