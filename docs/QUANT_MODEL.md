@@ -1,37 +1,35 @@
-# Quant Model — Initial Specification
+# Quant Model — Version 0.1.0
 
-## Components and research weights
-| Component | Initial weight | Example features |
+## Component hypotheses
+| Component | Weight | Example features |
 |---|---:|---|
 | Inventory & liquidity | 30% | COMEX/LBMA stocks, lease rates, curve, spreads |
-| Macro | 25% | DXY, real yields, policy expectations |
+| Macro | 25% | USD proxies, real yields, policy expectations |
 | Supply & industrial demand | 30% | mine supply, recycling, solar, electronics, substitution |
 | Positioning | 15% | CFTC positioning, ETF flows, volatility |
 
-Weights are starting hypotheses, not empirically optimized parameters.
+These weights are research hypotheses, not empirically optimized parameters.
 
-## Pipeline
-1. Ingest source observations with provenance.
-2. Validate schema, units, timestamps and freshness.
-3. Transform each feature into a consistent bullish/bearish orientation.
-4. Normalize using documented rolling or economically meaningful thresholds.
-5. Aggregate only when minimum data coverage is met.
-6. Produce score, component contributions, uncertainty and explanation.
-7. Persist immutable model version and input snapshot.
-8. Evaluate out-of-sample and against simple baselines.
+## Scoring contract
+The engine accepts normalized feature signals in the range 0–100. A feature score must be directionally normalized before aggregation; raw values in incompatible units must never be averaged. A positive direction means a stronger silver-market backdrop, while a negative direction must be inverted by the feature adapter before it reaches the composite engine.
 
-## Required output
-- score 0–100 (only when coverage is sufficient)
-- regime: bullish / neutral / bearish
-- horizon
-- confidence and data coverage
-- component contributions
-- evidence references and timestamps
-- invalidation / risk conditions
-- model_version
+Initial descriptive regime thresholds:
+- 0–40: bearish
+- above 40 and below 60: neutral
+- 60–100: bullish
 
-## Validation
-Avoid look-ahead bias and survivorship bias. Use time-based train/test splits, walk-forward evaluation, transaction costs and slippage. Report calibration, drawdown, turnover and benchmark comparisons. Do not publish win rates until reproducible backtests exist.
+These are not trade recommendations.
 
-## Missing data
-Missing, stale or low-confidence observations must reduce coverage/confidence or block the score. Do not silently impute values in user-facing signals.
+## Coverage and confidence
+Component weights are inventory/liquidity 30%, macro 25%, supply/demand 30%, and positioning 15%. Coverage is the sum of weights for components with at least one accepted input. The score is withheld unless coverage is at least 65%, at least two components are represented, and aggregate confidence meets the configured minimum.
+
+Within a component, inputs are confidence-weighted. Estimated observations receive a configurable confidence haircut; manual observations receive a larger haircut and can be disabled by policy. Stale, unavailable, malformed, future-dated, duplicate, or low-confidence inputs are rejected.
+
+## Normalization
+normalizeZScore maps a direction-adjusted z-score to 50 + 15z, clipped to 0–100. It requires a historical mean and standard deviation computed only from data available at the observation timestamp. It returns no value when the standard deviation is non-positive or inputs are invalid. Production adapters must document the rolling window and prevent look-ahead bias.
+
+## Output and reproducibility
+Each score includes model version, as-of timestamp, accepted input keys, rejected inputs and reasons, component contributions, coverage, confidence and thresholds. Persistence must retain the exact input snapshot and model parameters used for each score.
+
+## Validation before publication
+Use time-based train/test splits, walk-forward evaluation, transaction costs and slippage. Report drawdown, turnover, calibration and benchmark comparisons. Do not publish win rates or performance claims until reproducible backtests exist.
