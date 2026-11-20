@@ -49,7 +49,7 @@ Open http://localhost:3000.
 - lib/quant/supabase-pipeline.ts — historical observation retrieval and idempotent score persistence
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
-The score engine accepts normalized feature scores, not raw market values in incompatible units. It withholds output when minimum coverage, group count or confidence requirements are not met. Empirical calibration is required; the scoring endpoint will not manufacture calibration values.
+The score engine accepts normalized feature scores, not raw market values in incompatible units. It withholds output when weighted indicator breadth, group count or confidence requirements are not met. With only the initial three FRED macro series and one CFTC positioning series, weighted coverage is 20%, so the model intentionally does not publish a composite score yet. Empirical calibration is required; the scoring endpoint will not manufacture calibration values.
 
 ## Environment
 Copy .env.example to .env.local. FRED ingestion requires FRED_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CRON_SECRET. CFTC ingestion requires the Supabase URL, service-role key and CRON_SECRET. Scoring additionally requires SILVER_FEATURE_CALIBRATION_JSON. The calibration preview endpoint can derive candidate means and sample standard deviations from verified historical observations, but its output must be reviewed for window choice, market-regime coverage and point-in-time leakage before activation. Never expose the service-role key to a browser.
