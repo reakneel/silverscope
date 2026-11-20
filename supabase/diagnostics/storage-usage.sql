@@ -8,10 +8,14 @@ select
   schemaname,
   relname as table_name,
   n_live_tup as estimated_live_rows,
+  n_dead_tup as estimated_dead_rows,
+  round(100.0 * n_dead_tup / nullif(n_live_tup + n_dead_tup, 0), 2) as estimated_dead_tuple_pct,
   pg_size_pretty(pg_relation_size(relid)) as table_data,
   pg_size_pretty(pg_indexes_size(relid)) as indexes,
   pg_size_pretty(pg_total_relation_size(relid)) as total_size,
   pg_total_relation_size(relid) as total_size_bytes,
+  last_vacuum,
+  last_autovacuum,
   last_analyze,
   last_autoanalyze
 from pg_stat_user_tables
