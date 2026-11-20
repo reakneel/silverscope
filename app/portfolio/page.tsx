@@ -11,7 +11,7 @@ export default async function PortfolioPage() {
   const user = await getCurrentSupabaseUser();
   return <div className="page-wrap">
     <div className="page-heading">
-      <div><div className="eyebrow">PERSONAL ACCOUNT WORKSPACE</div><h1>Portfolio</h1><p>Brokerage ledger, source reconciliation and portfolio performance.</p></div>
+      <div><div className="eyebrow">PERSONAL ACCOUNT WORKSPACE</div><h1>Portfolio</h1><p>Brokerage ledger, holdings and source reconciliation.</p></div>
       <span className="demo-tag"><span/> REAL DATA ONLY</span>
     </div>
     {!user ? <section className="panel"><h2>Sign in to continue</h2><p className="muted">Portfolio accounts and imported statements are private to the signed-in user.</p><Link className="button-primary portfolio-link" href="/login">Sign in</Link></section> : <>
