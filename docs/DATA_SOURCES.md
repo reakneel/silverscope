@@ -12,6 +12,7 @@ This is a source discovery and activation register. A listed source is not consi
 | Futures pricing | CME Group | COMEX silver futures settlement | daily | Website values are delayed until midnight CT; earlier access and DataMine files require relevant CME data arrangements |
 | Physical vaults | LBMA | vault holdings | monthly | Requires an authorized data source / licence; no adapter activated |
 | Spot benchmark | LBMA / ICE IBA | LBMA Silver Price | daily | Usage licence required for valuation, pricing, transaction or financial-product use; no feed connected |
+| Spot reference | Contracted market-data vendor | Silver spot USD / troy oz | daily / intraday | CSV import adapter and licence gate implemented; provider contract, source URL and permitted use must be verified before activation |
 | China market | SHFE / SGE | inventories, premiums, trading data | daily/weekly | Verify public availability and terms |
 | Policy expectations | CME FedWatch | implied policy probabilities | event-driven | Confirm permitted use |
 | Industry | Silver Institute / Metals Focus | annual supply-demand studies | annual | May require licensed reports |
