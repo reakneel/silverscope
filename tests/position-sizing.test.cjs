@@ -11,8 +11,8 @@ test("sizes integer contracts from risk budget and stop distance", () => {
 });
 
 test("caps position by margin and max contracts", () => {
-  const marginLimited = sizeFuturesPosition({ equity: 100000, riskFraction: 0.5, entryPrice: 30, stopPrice: 29, contractMultiplier: 100, maxContracts: 20, initialMarginRate: 0.5 });
-  assert.equal(marginLimited.contracts, 6);
+  const marginLimited = sizeFuturesPosition({ equity: 100000, riskFraction: 0.5, entryPrice: 30, stopPrice: 29, contractMultiplier: 100, maxContracts: 100, initialMarginRate: 0.5 });
+  assert.equal(marginLimited.contracts, 66);
   assert.equal(marginLimited.limitingConstraint, "margin");
   const capped = sizeFuturesPosition({ equity: 100000, riskFraction: 0.5, entryPrice: 30, stopPrice: 29, contractMultiplier: 100, maxContracts: 2 });
   assert.equal(capped.contracts, 2);
