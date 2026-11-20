@@ -48,9 +48,12 @@ export async function GET() {
       const accountPositions = positions.filter((row) => row.account_id === account.id);
       const positionsAsOf = accountPositions.reduce<string | null>((latest, row) => !latest || Date.parse(row.as_of) > Date.parse(latest) ? row.as_of : latest, null);
       const latestPositions = positionsAsOf ? accountPositions.filter((row) => row.as_of === positionsAsOf) : [];
-      const cashCandidates = cashRows.filter((row) => row.account_id === account.id && row.currency === account.base_currency);
-      const cashAsOf = cashCandidates[0]?.as_of ?? null;
-      const cashSnapshot = cashAsOf ? cashCandidates.find((row) => row.as_of === cashAsOf) : undefined;
+      const accountCashRows = cashRows.filter((row) => row.account_id === account.id);
+      const latestCashByCurrency = new Map<string, CashRow>();
+      for (const row of accountCashRows) if (!latestCashByCurrency.has(row.currency)) latestCashByCurrency.set(row.currency, row);
+      const cashSnapshot = latestCashByCurrency.get(account.base_currency);
+      const cashAsOf = cashSnapshot?.as_of ?? null;
+      const cash = numeric(cashSnapshot?.total_cash ?? null);
       const cash = numeric(cashSnapshot?.total_cash ?? null);
       const holdings: HoldingInput[] = latestPositions.map((row) => {
         const relation = Array.isArray(row.instrument) ? row.instrument[0] : row.instrument;
@@ -77,7 +80,7 @@ export async function GET() {
         holdings: valuation.holdings,
         positionsAsOf,
         cashAsOf,
-        foreignCurrencyCashCount: cashRows.filter((row) => row.account_id === account.id && row.currency !== account.base_currency).length,
+        foreignCurrencyCashCount: [...latestCashByCurrency.keys()].filter((currency) => currency !== account.base_currency).length,
         source: "broker_statement_snapshot",
       };
     });
