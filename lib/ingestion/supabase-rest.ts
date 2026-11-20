@@ -23,7 +23,7 @@ export async function persistIngestionResult(result: IngestionResult, options: S
   };
 
   const created = await request("ingestion_runs", "POST", [{
-    source_id: result.sourceId, status: "running", started_at: result.startedAt, metadata: { adapter: "fred-macro-v1" },
+    source_id: result.sourceId, status: "running", started_at: result.startedAt, metadata: { adapter: result.sourceId },
   }], "return=representation") as SupabaseRow[] | null;
   const runId = created?.[0]?.id;
   if (!runId) throw new Error("Supabase did not return an ingestion run ID.");
@@ -47,11 +47,11 @@ export async function persistIngestionResult(result: IngestionResult, options: S
     await request(`ingestion_runs?id=eq.${encodeURIComponent(runId)}`, "PATCH", {
       status: result.status, completed_at: result.completedAt, fetched_count: result.fetchedCount,
       accepted_count: result.acceptedCount, rejected_count: result.rejectedCount, error_summary: result.error ?? null,
-      metadata: { adapter: "fred-macro-v1", inserted_observations: insertedObservations, rejected: result.rejected },
+      metadata: { adapter: result.sourceId, inserted_observations: insertedObservations, rejected: result.rejected },
     }, "return=minimal");
 
     if (result.status !== "failed") {
-      await request("data_sources?id=eq.fred", "PATCH", {
+      await request(`data_sources?id=eq.${encodeURIComponent(result.sourceId)}`, "PATCH", {
         enabled: true, last_success_at: result.completedAt,
       }, "return=minimal");
     }
