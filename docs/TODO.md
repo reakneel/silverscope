@@ -42,7 +42,7 @@
 - [ ] Add integration tests against a staging database
 - [x] Add foundational walk-forward splitter and cost-aware backtest metric primitives\n- [x] Add a single-contract next-bar futures execution simulator with multiplier P&L, commissions, slippage, position caps and forced final liquidation
 - [x] Add strict point-in-time feature construction that rejects unknown / future publication timestamps
-- [ ] Extend execution with explicit expiry calendars, contract roll spreads, margin and partial-fill constraints
+- [x] Add explicit old-contract exit / new-contract entry prices to prevent roll-spread gaps from being booked as P&L\n- [ ] Add exchange expiry calendars, margin / liquidation rules and partial-fill constraints
 - [ ] Build a multi-contract portfolio runner with order, roll, fee and slippage simulation
 - [ ] Add source freshness / ingestion failure monitoring and alerting
 
