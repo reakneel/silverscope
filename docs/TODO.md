@@ -46,8 +46,11 @@
 - [x] Add explicit old-contract exit / new-contract entry prices to prevent roll-spread gaps from being booked as P&L
 - [x] Add simplified initial / maintenance margin checks and maintenance liquidation to the single-contract simulator
 - [x] Add risk-budget and margin-aware integer position sizing
-- [ ] Add exchange expiry calendars, SPAN / broker margin schedules, intraday calls and partial-fill constraints
-- [ ] Build a multi-contract portfolio runner with order, roll, fee and slippage simulation
+- [ ] Add exchange expiry calendars, SPAN / broker margin schedules and intraday margin calls
+- [x] Add bar-volume participation constrained order-fill primitive with explicit residual quantity
+- [x] Add multi-contract portfolio exposure and additive-margin risk snapshot with configurable limits
+- [ ] Integrate partial fills into persistent multi-contract order/roll lifecycle
+- [ ] Build a full multi-contract portfolio runner with shared cash/equity, persistent orders, roll, fee and slippage simulation
 - [ ] Add source freshness / ingestion failure monitoring and alerting
 
 ## P2 — Accounts and paid product
@@ -62,7 +65,10 @@
 - [ ] Jurisdiction-specific regulatory review
 
 ## P3 — Research quality
-- [ ] Historical data store and reproducible snapshots
+- [x] Add canonical SHA-256 point-in-time research snapshots and versioned experiment manifests
+- [x] Add append-only Supabase schema and owner-scoped RLS for experiment manifests, run snapshots and artifacts
+- [ ] Apply migration 0006 after provisioning Supabase
+- [ ] Build a persistent historical data store and reproducible dataset snapshots
 - [ ] Full strategy simulation and walk-forward performance reports
 - [ ] Transaction costs and slippage
 - [ ] Benchmark and risk metrics
