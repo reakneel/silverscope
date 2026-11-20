@@ -2,7 +2,7 @@ import { Database, Filter } from "lucide-react";
 import { getMarketOverview } from "@/lib/data/market-overview";
 
 const groups = [
-  { category: "Inventory & liquidity", items: [["COMEX registered stocks","oz","Warehouse inventory"],["COMEX eligible stocks","oz","Warehouse inventory"],["COMEX total stocks","troy_oz","Registered + eligible inventory"],["LBMA vault holdings","tonnes","Monthly inventory"],["Silver lease rate","%","Funding / physical tightness"],["Nearby futures spread","USD/oz","Term structure"]] },
+  { category: "Inventory & liquidity", items: [["COMEX registered stocks","oz","Warehouse inventory"],["COMEX eligible stocks","oz","Warehouse inventory"],["COMEX total stocks","oz","Registered + eligible inventory"],["LBMA vault holdings","tonnes","Monthly inventory"],["Silver lease rate","%","Funding / physical tightness"],["Nearby futures spread","USD/oz","Term structure"]] },
   { category: "Macro", items: [["Broad trade-weighted USD index","index","FRED broad USD proxy; not ICE DXY"],["US 10Y real yield","%","FRED DFII10 · opportunity cost"],["US 10Y nominal yield","%","FRED DGS10 · nominal rates"],["Fed policy expectations","probability","Policy pricing"],["Gold / silver ratio","ratio","Relative valuation"]] },
   { category: "Supply & demand", items: [["Mine production","tonnes","Primary supply"],["Recycling supply","tonnes","Secondary supply"],["Solar silver intensity","mg/W","PV demand and thrifting"],["Industrial demand","tonnes","Fabrication demand"]] },
   { category: "Positioning", items: [["CFTC managed money net","contracts","Futures positioning"],["Silver ETF holdings","tonnes","Investment flows"],["Implied volatility","%","Options market risk"]] }
