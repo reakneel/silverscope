@@ -4,6 +4,8 @@ export interface FuturesBar {
   open: number;
   close: number;
   targetContracts: number;
+  /** Old contract executable price at this bar timestamp; required when contractId changes. */
+  rollFromPrice?: number;
 }
 export interface FuturesExecutionOptions {
   initialCapital: number;
@@ -22,7 +24,7 @@ export interface ExecutionFill {
   fillPrice: number;
   commission: number;
   slippageCost: number;
-  reason: "rebalance" | "final_liquidation";
+  reason: "rebalance" | "roll" | "final_liquidation";
 }
 export interface FuturesEquityPoint {
   timestamp: string;
@@ -49,8 +51,9 @@ function nonNegative(value: number, name: string): void {
 /**
  * Close-of-bar target positions are executed at the next bar's open.
  * Futures P&L is marked from prior close to current open, then current open to close.
- * The final position is liquidated at the final close. Contract rolls are deliberately
- * rejected: callers must split simulations by contract and model roll spreads explicitly.
+ * The final position is liquidated at the final close. Contract changes require an explicit
+ * old-contract exit price (`rollFromPrice`); the old contract is closed and the new one opened
+ * at the current bar open, so the calendar-spread gap is not mistaken for trading P&L.
  */
 export function simulateFuturesExecution(
   bars: FuturesBar[],
@@ -69,7 +72,10 @@ export function simulateFuturesExecution(
     positive(bar.close, "close");
     if (!Number.isFinite(dates[i])) throw new Error("Every bar timestamp must be valid.");
     if (i && dates[i] <= dates[i - 1]) throw new Error("Bars must be strictly chronological and unique.");
-    if (i && bar.contractId !== bars[i - 1].contractId) throw new Error("Contract changes require an explicit roll model; split the simulation by contract.");
+    const changedContract = i > 0 && bar.contractId !== bars[i - 1].contractId;
+    if (changedContract && bar.rollFromPrice === undefined) throw new Error("Contract changes require rollFromPrice for the old contract.");
+    if (!changedContract && bar.rollFromPrice !== undefined) throw new Error("rollFromPrice is only valid when the contract changes.");
+    if (bar.rollFromPrice !== undefined) positive(bar.rollFromPrice, "rollFromPrice");
     if (!Number.isInteger(bar.targetContracts)) throw new Error("targetContracts must be an integer.");
     if (Math.abs(bar.targetContracts) > options.maxContracts) throw new Error("Target position exceeds maxContracts.");
     if (options.allowShort === false && bar.targetContracts < 0) throw new Error("Short positions are disabled.");
@@ -94,9 +100,18 @@ export function simulateFuturesExecution(
   };
   for (let i = 1; i < bars.length; i++) {
     const previous = bars[i - 1], bar = bars[i];
-    equity += position * (bar.open - previous.close) * options.contractMultiplier;
+    const changedContract = bar.contractId !== previous.contractId;
+    let tradedNotional = 0;
     const target = previous.targetContracts;
-    const tradedNotional = execute(bar.timestamp, bar.contractId, bar.open, target, "rebalance");
+    if (changedContract) {
+      const oldExit = bar.rollFromPrice as number;
+      equity += position * (oldExit - previous.close) * options.contractMultiplier;
+      tradedNotional += execute(bar.timestamp, previous.contractId, oldExit, 0, "roll");
+      tradedNotional += execute(bar.timestamp, bar.contractId, bar.open, target, "roll");
+    } else {
+      equity += position * (bar.open - previous.close) * options.contractMultiplier;
+      tradedNotional += execute(bar.timestamp, bar.contractId, bar.open, target, "rebalance");
+    }
     equity += position * (bar.close - bar.open) * options.contractMultiplier;
     if (equity <= 0) throw new Error("Simulation equity reached zero or below.");
     equityCurve.push({ timestamp: bar.timestamp, equity, contracts: position, close: bar.close, turnover: tradedNotional / Math.max(equity, 1e-12) });
