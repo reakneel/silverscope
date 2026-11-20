@@ -54,7 +54,6 @@ export async function GET() {
       const cashSnapshot = latestCashByCurrency.get(account.base_currency);
       const cashAsOf = cashSnapshot?.as_of ?? null;
       const cash = numeric(cashSnapshot?.total_cash ?? null);
-      const cash = numeric(cashSnapshot?.total_cash ?? null);
       const holdings: HoldingInput[] = latestPositions.map((row) => {
         const relation = Array.isArray(row.instrument) ? row.instrument[0] : row.instrument;
         return {
