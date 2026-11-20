@@ -28,7 +28,7 @@ export interface AccountValuation {
   cash: number | null;
   positionsValue: number | null;
   totalAssets: number | null;
-  completeness: number;
+      completeness: (validValues.length + (finite(args.cash) ? 1 : 0)) / (rows.length + 1),
   status: "complete" | "partial" | "unavailable";
   asOf: string | null;
 }
@@ -47,8 +47,9 @@ export function calculateAccountValuation(args: {
     const validQuantity = finite(holding.quantity) && holding.quantity >= 0;
     const costValue = validQuantity && finite(holding.costBasis) && holding.costBasis >= 0
       ? holding.quantity * holding.costBasis : null;
-    const useSnapshot = finite(holding.importedMarketValue) && holding.importedMarketValue >= 0;
-    const useQuote = !useSnapshot && holding.quoteStatus === "verified" && finite(holding.quotePrice) && holding.quotePrice >= 0;
+    const sameCurrency = holding.currency === args.currency;
+    const useSnapshot = sameCurrency && validQuantity && finite(holding.importedMarketValue) && holding.importedMarketValue >= 0;
+    const useQuote = sameCurrency && validQuantity && !useSnapshot && holding.quoteStatus === "verified" && finite(holding.quotePrice) && holding.quotePrice >= 0;
     const marketValue = !validQuantity ? null
       : useSnapshot ? holding.importedMarketValue
       : useQuote ? holding.quantity * holding.quotePrice! : null;
@@ -67,8 +68,8 @@ export function calculateAccountValuation(args: {
   });
 
   const validValues = rows.filter((row) => finite(row.marketValue));
-  const positionsValue = validValues.length ? validValues.reduce((sum, row) => sum + row.marketValue!, 0) : null;
-  const complete = rows.length > 0 && validValues.length === rows.length && finite(args.cash);
+  const positionsValue = rows.length === 0 ? 0 : validValues.length ? validValues.reduce((sum, row) => sum + row.marketValue!, 0) : null;
+  const complete = validValues.length === rows.length && finite(args.cash);
   const partial = validValues.length > 0 || finite(args.cash);
   const totalAssets = complete ? positionsValue! + args.cash! : null;
   const denominator = totalAssets !== null && totalAssets > 0 ? totalAssets : null;
