@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -51,21 +52,25 @@ def validate_archive(path: Path) -> dict[str, Any]:
     if actual_hash != manifest.get("sha256"):
         raise RuntimeError("Archive SHA-256 mismatch. No database operation was performed.")
     count = 0
-    seen: set[str] = set()
-    with gzip.open(path, "rt", encoding="utf-8", newline="") as stream:
-        reader = csv.DictReader(stream)
-        if reader.fieldnames != ["archive_record"]:
-            raise RuntimeError("Unexpected archive CSV header.")
-        for item in reader:
-            record = json.loads(item["archive_record"])
-            row = record.get("row")
-            row_hash = record.get("row_hash")
-            if not isinstance(row, dict) or not row.get("id") or not isinstance(row_hash, str) or len(row_hash) != 32:
-                raise RuntimeError(f"Invalid archive record at row {count + 1}.")
-            if row["id"] in seen:
-                raise RuntimeError(f"Duplicate observation ID in archive: {row['id']}")
-            seen.add(row["id"])
-            count += 1
+    with tempfile.TemporaryDirectory(prefix="silverscope-archive-verify-") as temp_dir:
+        connection = sqlite3.connect(Path(temp_dir) / "ids.sqlite")
+        connection.execute("CREATE TABLE ids (id TEXT PRIMARY KEY)")
+        with gzip.open(path, "rt", encoding="utf-8", newline="") as stream:
+            reader = csv.DictReader(stream)
+            if reader.fieldnames != ["archive_record"]:
+                raise RuntimeError("Unexpected archive CSV header.")
+            for item in reader:
+                record = json.loads(item["archive_record"])
+                row = record.get("row")
+                row_hash = record.get("row_hash")
+                if not isinstance(row, dict) or not row.get("id") or not isinstance(row_hash, str) or len(row_hash) != 32:
+                    raise RuntimeError(f"Invalid archive record at row {count + 1}.")
+                try:
+                    connection.execute("INSERT INTO ids(id) VALUES (?)", (row["id"],))
+                except sqlite3.IntegrityError as error:
+                    raise RuntimeError(f"Duplicate observation ID in archive: {row['id']}") from error
+                count += 1
+        connection.close()
     if count != int(manifest.get("rowCount", -1)):
         raise RuntimeError(f"Archive row count mismatch: manifest={manifest.get('rowCount')} actual={count}.")
     return manifest
@@ -104,7 +109,8 @@ def delete_archived_rows(database_url: str, archive_path: Path, cutoff: str) -> 
 CREATE TEMP TABLE _silverscope_archive_rows(row_json jsonb NOT NULL) ON COMMIT DROP;
 \copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
 SELECT set_config('silverscope.archive_cutoff', '{cutoff}', true);
-DO $$
+LOCK TABLE public.observations IN SHARE ROW EXCLUSIVE MODE;
+DO $
 DECLARE expected_count bigint; matched_count bigint; eligible_count bigint; deleted_count bigint;
         cutoff_value timestamptz := current_setting('silverscope.archive_cutoff')::timestamptz;
 BEGIN
@@ -221,23 +227,27 @@ def create_archive(args: argparse.Namespace) -> Path:
     row_count = 0
     min_observed = None
     max_observed = None
-    seen: set[str] = set()
-    with gzip.open(archive_path, "rt", encoding="utf-8", newline="") as stream:
-        reader = csv.DictReader(stream)
-        if reader.fieldnames != ["archive_record"]:
-            raise RuntimeError("PostgreSQL export did not produce the expected CSV header.")
-        for item in reader:
-            record = json.loads(item["archive_record"])
-            row = record.get("row", {})
-            if not row.get("id") or not record.get("row_hash"):
-                raise RuntimeError(f"Invalid exported observation at row {row_count + 1}.")
-            if row["id"] in seen:
-                raise RuntimeError(f"Duplicate observation ID in export: {row['id']}")
-            seen.add(row["id"])
-            observed_at = row["observed_at"]
-            min_observed = min(min_observed, observed_at) if min_observed else observed_at
-            max_observed = max(max_observed, observed_at) if max_observed else observed_at
-            row_count += 1
+    with tempfile.TemporaryDirectory(prefix="silverscope-archive-export-") as temp_dir:
+        connection = sqlite3.connect(Path(temp_dir) / "ids.sqlite")
+        connection.execute("CREATE TABLE ids (id TEXT PRIMARY KEY)")
+        with gzip.open(archive_path, "rt", encoding="utf-8", newline="") as stream:
+            reader = csv.DictReader(stream)
+            if reader.fieldnames != ["archive_record"]:
+                raise RuntimeError("PostgreSQL export did not produce the expected CSV header.")
+            for item in reader:
+                record = json.loads(item["archive_record"])
+                row = record.get("row", {})
+                if not row.get("id") or not record.get("row_hash"):
+                    raise RuntimeError(f"Invalid exported observation at row {row_count + 1}.")
+                try:
+                    connection.execute("INSERT INTO ids(id) VALUES (?)", (row["id"],))
+                except sqlite3.IntegrityError as error:
+                    raise RuntimeError(f"Duplicate observation ID in export: {row['id']}") from error
+                observed_at = row["observed_at"]
+                min_observed = min(min_observed, observed_at) if min_observed else observed_at
+                max_observed = max(max_observed, observed_at) if max_observed else observed_at
+                row_count += 1
+        connection.close()
 
     digest = sha256_file(archive_path)
     manifest = {
