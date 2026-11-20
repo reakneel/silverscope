@@ -34,7 +34,8 @@
 - [ ] Configure FRED API key and cron secret
 - [ ] Run controlled CFTC Silver API ingestion and historical backfill
 - [ ] Review calibration window and activate validated parameters
-- [ ] Implement one verified silver spot source with commercial-use rights
+- [x] Add a license-gated CSV adapter and import route for silver spot reference data
+- [ ] Contract and activate one verified silver spot source with commercial-use rights
 - [x] Implement strict COMEX registered / eligible / total inventory CSV parser and protected import route
 - [ ] Automate official CME XLS ingestion after verifying a stable supported format and permitted access terms
 - [ ] Add LBMA holdings and vault data adapter after obtaining licensed data access
