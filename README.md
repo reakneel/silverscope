@@ -61,6 +61,7 @@ Open http://localhost:3000.
 - lib/research/walk-forward-report.ts — non-overlapping out-of-sample report stitching and Bonferroni multiple-testing correction
 - lib/research/scenario-analysis.ts — multi-contract price-shock stress tests and execution-cost sensitivity analysis
 - lib/research/portfolio-execution.ts — shared-equity multi-contract execution, volume-limited persistent target orders, margin admission and liquidation
+- lib/monitoring/source-health.ts — explicit-cadence freshness, ingestion failure classification and alert summaries
 - lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
