@@ -25,6 +25,9 @@ test("rejects unknown publication time, unverified and future/unavailable observ
   assert.throws(() => createResearchSnapshot({ ...input, observations: [{ ...observation, fetchedAt: "2026-01-04T00:00:00Z" }] }), /available/);
   assert.throws(() => createResearchSnapshot({ ...input, observations: [{ ...observation, publishedAt: "2026-01-04T00:00:00Z" }] }), /available/);
 });
+test("rejects duplicate source observation identities", () => {
+  assert.throws(() => createResearchSnapshot({ ...input, observations: [observation, observation] }), /Duplicate observation/);
+});
 test("creates a stable versioned experiment manifest", () => {
   const a = createExperimentManifest({ id: "mean-reversion-v1", hypothesis: "test hypothesis", strategyVersion: "1", modelVersion: "m1", parameters: { threshold: 1 }, assumptions: { fee: 2 } });
   const b = createExperimentManifest({ id: "mean-reversion-v1", hypothesis: "test hypothesis", strategyVersion: "1", modelVersion: "m1", parameters: { threshold: 1 }, assumptions: { fee: 2 } });
