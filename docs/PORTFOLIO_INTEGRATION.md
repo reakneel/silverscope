@@ -146,7 +146,7 @@ Merged into SilverScope main:
 - PR #25: source-aware valuation, drawdown and excess-return calculation core with missing-data and currency safeguards.
 - PR #26: broker-reported market price field on position snapshots (migration 0012). Not applied to Supabase.
 - PR #27: owner-scoped latest position/cash read API and real-data dashboard panel. No demo fallback.
-- PR #28: transaction-history API and UI (merge pending at the time of this status note).
+- PR #28 (this change): transaction-history API and UI for real broker executions and cash-affecting events.
 
 ## Remaining release gates
 
