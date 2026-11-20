@@ -12,6 +12,8 @@
 - `createExperimentManifest`: versioned, content-addressed experiment definitions.
 - `buildWalkForwardReport`: stitches non-overlapping out-of-sample fold returns and emits aggregate risk metrics without inventing calendar-gap returns.
 - `adjustPValuesBonferroni`: family-wise error correction across a declared set of tested hypotheses.
+- `evaluatePortfolioScenarios`: per-contract percentage price shocks with marked P&L, stressed notional and initial/maintenance margin shortfalls.
+- `evaluateCostSensitivity`: reruns a fixed equity/turnover path under explicit transaction-cost assumptions.
 - `buildPointInTimeFeatureSignals`: strict historical feature construction requiring verified observations with known publication timestamps no later than the decision time.
 
 These are deterministic research primitives. They do not establish that a strategy is profitable or reproduce a complete exchange matching engine.
@@ -25,6 +27,12 @@ A contract change requires an explicit `rollFromPrice` representing the old cont
 Initial and maintenance margin rates are optional but must be supplied together. Initial margin is checked before increasing/opening a position. Equity is checked against maintenance margin after each bar mark; if breached, the simulator liquidates at that bar's close with configured slippage and commission. These are simplified percentage-of-notional assumptions, not exchange-specific SPAN or broker house-margin rules.
 
 The position-sizing helper estimates risk as stop distance multiplied by contract multiplier. It floors to whole contracts and applies both risk-budget and initial-margin constraints. It does not guarantee the stop can execute at its stated price; gaps and liquidity can cause larger losses.
+
+## Scenario analysis and execution-cost sensitivity
+
+Portfolio stress scenarios apply explicit percentage price shocks by contract, mark long and short P&L with each contract multiplier, and recompute gross notional plus additive initial/maintenance margin. Unspecified contracts receive a zero shock. Insolvency and margin shortfalls are reported rather than clamped away. Scenario shocks are user-supplied assumptions, not forecasts or calibrated probabilities.
+
+Cost sensitivity re-evaluates a fixed equity and turnover path under a declared set of trading-cost basis-point assumptions. It does not infer spreads, impact or fees from missing market data; the user must supply realistic turnover and cost ranges.
 
 ## Out-of-sample reporting and multiple testing
 
