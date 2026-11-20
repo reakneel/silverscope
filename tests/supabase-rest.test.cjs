@@ -18,12 +18,8 @@ test("persists an ingestion run and idempotent observation rows", async () => {
   const calls = [];
   const fetchImpl = async (url, init) => {
     calls.push({ url, init });
-    if (url.endsWith("/ingestion_runs")) {
-      return { ok: true, status: 201, text: async () => JSON.stringify([{ id: "run-1" }]) };
-    }
-    if (url.includes("/observations?")) {
-      return { ok: true, status: 201, text: async () => JSON.stringify([{ id: "obs-1" }]) };
-    }
+    if (url.endsWith("/ingestion_runs")) return { ok: true, status: 201, text: async () => JSON.stringify([{ id: "run-1" }]) };
+    if (url.includes("/observations?")) return { ok: true, status: 201, text: async () => JSON.stringify([{ id: "obs-1" }]) };
     return { ok: true, status: 204, text: async () => "" };
   };
   const result = await persistIngestionResult(baseResult(), {
@@ -38,7 +34,10 @@ test("persists an ingestion run and idempotent observation rows", async () => {
   const rows = JSON.parse(observationCall.init.body);
   assert.equal(rows[0].dedupe_key, "fred:us_10y_real_yield:2026-11-19T00:00:00.000Z");
   assert.equal(observationCall.init.headers.apikey, "service-secret");
-  assert.ok(calls.some((call) => call.url.includes("/data_sources?id=eq.fred")));
+  const patchCalls = calls.filter((call) => call.init.method === "PATCH");
+  assert.equal(patchCalls.length, 2);
+  assert.ok(patchCalls.every((call) => !Array.isArray(JSON.parse(call.init.body))));
+  assert.ok(patchCalls.some((call) => JSON.parse(call.init.body).enabled === true));
 });
 test("records failed ingestion runs without inserting observations", async () => {
   const calls = [];

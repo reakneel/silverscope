@@ -44,23 +44,23 @@ export async function persistIngestionResult(result: IngestionResult, options: S
       insertedObservations = inserted?.length ?? 0;
     }
 
-    await request(`ingestion_runs?id=eq.${encodeURIComponent(runId)}`, "PATCH", [{
+    await request(`ingestion_runs?id=eq.${encodeURIComponent(runId)}`, "PATCH", {
       status: result.status, completed_at: result.completedAt, fetched_count: result.fetchedCount,
       accepted_count: result.acceptedCount, rejected_count: result.rejectedCount, error_summary: result.error ?? null,
       metadata: { adapter: "fred-macro-v1", inserted_observations: insertedObservations, rejected: result.rejected },
-    }], "return=minimal");
+    }, "return=minimal");
 
     if (result.status !== "failed") {
-      await request("data_sources?id=eq.fred", "PATCH", [{
+      await request("data_sources?id=eq.fred", "PATCH", {
         enabled: true, last_success_at: result.completedAt,
-      }], "return=minimal");
+      }, "return=minimal");
     }
     return { runId, insertedObservations, acceptedObservations: result.acceptedCount, status: result.status };
   } catch (error) {
-    await request(`ingestion_runs?id=eq.${encodeURIComponent(runId)}`, "PATCH", [{
+    await request(`ingestion_runs?id=eq.${encodeURIComponent(runId)}`, "PATCH", {
       status: "failed", completed_at: new Date().toISOString(),
       error_summary: error instanceof Error ? error.message.slice(0, 500) : "Persistence failed",
-    }], "return=minimal");
+    }, "return=minimal");
     throw error;
   }
 }
