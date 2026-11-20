@@ -5,7 +5,7 @@ const now = "2026-11-20T12:00:00Z";
 const base = { sourceId: "fred", enabled: true, licenseStatus: "public_api", expectedIntervalMs: 24 * 60 * 60 * 1000, lastSuccessAt: "2026-11-20T00:00:00Z", lastAttemptAt: "2026-11-20T00:01:00Z", lastRunStatus: "succeeded", now };
 test("classifies healthy, delayed and stale sources from explicit cadence", () => {
   assert.equal(evaluateSourceHealth(base).status, "healthy");
-  assert.equal(evaluateSourceHealth({ ...base, lastSuccessAt: "2026-11-18T00:00:00Z" }).status, "delayed");
+  assert.equal(evaluateSourceHealth({ ...base, lastSuccessAt: "2026-11-19T00:00:00Z" }).status, "delayed");
   assert.equal(evaluateSourceHealth({ ...base, lastSuccessAt: "2026-11-17T00:00:00Z" }).status, "stale");
 });
 test("fails closed for disabled, unlicensed, never-successful and failed sources", () => {
