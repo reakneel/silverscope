@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   }
   try {
     const persisted = await persistIngestionResult(result, { baseUrl, serviceRoleKey });
-    const metadataResponse = await fetch(`${baseUrl.replace(/\\/$/, "")}/rest/v1/data_sources?id=eq.licensed-market-data`, {
+    const metadataResponse = await fetch(`${baseUrl.replace(/\/$/, "")}/rest/v1/data_sources?id=eq.licensed-market-data`, {
       method: "PATCH", cache: "no-store",
       headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json", Prefer: "return=minimal" },
       body: JSON.stringify({ name: providerName, source_url: sourceUrl, license_status: "licensed", enabled: true }),
