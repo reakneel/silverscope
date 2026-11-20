@@ -4,10 +4,7 @@
     "deploymentEnabled": false
   },
   "crons": [
-    { "path": "/api/cron/ingest/fred", "schedule": "0 13 * * 1-5" },
-    { "path": "/api/cron/ingest/cftc", "schedule": "0 22 * * 5" },
-    { "path": "/api/cron/monitor/sources", "schedule": "30 13 * * 1-5" },
-    { "path": "/api/cron/monitor/quality", "schedule": "45 13 * * 1-5" },
-    { "path": "/api/cron/warehouse/archive", "schedule": "0 3 * * 0" }
+    { "path": "/api/cron/daily", "schedule": "0 22 * * *" },
+    { "path": "/api/cron/weekly", "schedule": "15 22 * * 5" }
   ]
 }
