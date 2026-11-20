@@ -51,6 +51,7 @@ export function parseCmeSilverStocksCsv(csv: string, options: CmeSilverStockPars
   const warehouseIndex = find("depository", "warehouse", "warehousename", "facility");
   const registeredIndex = find("registered", "registeredoz", "registeredounces", "registeredtotal");
   const eligibleIndex = find("eligible", "eligibleoz", "eligibleounces", "eligibletotal");
+  if (warehouseIndex < 0) throw new Error("CSV must include a Depository or Warehouse column to prevent accidental total double-counting.");
   if (registeredIndex < 0 || eligibleIndex < 0) {
     throw new Error("CSV headers must include Registered and Eligible ounce columns.");
   }
