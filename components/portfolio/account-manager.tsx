@@ -42,7 +42,6 @@ export function PortfolioAccountManager() {
       <label className="auth-field">数据来源
         <select className="auth-input" value={provider} onChange={(event) => { setProvider(event.target.value); setDisplayName(event.target.value === "xueqiu" ? "雪球组合" : labels[event.target.value] + "账户"); }}>
           <option value="huatai">华泰证券（真实券商账本）</option>
-          <option value="tonghuashun">同花顺（导出渠道）</option>
           <option value="other_broker">其他券商</option>
           <option value="xueqiu">雪球组合（独立策略数据）</option>
         </select>
