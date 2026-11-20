@@ -46,7 +46,7 @@ test("performance series computes cash-flow adjusted periodic and cumulative ret
     { date: "2026-01-03", value: 220.5 },
   ], [{ date: "2026-01-02", amount: 100, type: "external_inflow" }]);
   assert.equal(result[1].periodReturnPct, 10);
-  assert.equal(result[2].cumulativeReturnPct, 15.500000000000014);
+  assert.ok(Math.abs(result[2].cumulativeReturnPct - 15.5) < 1e-10);
 });
 
 test("risk metrics handle zero variance and benchmark beta", () => {
