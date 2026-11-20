@@ -36,3 +36,8 @@ The preview endpoint requests up to 5,000 observations independently for each of
 The CME inventory and licensed spot imports require the new `0006_cme_inventory_indicators.sql` migration before persistence. Convert the official XLS to CSV using a trusted local spreadsheet tool, inspect the report date and column totals, then POST the CSV bytes with `Content-Type: text/csv`. Do not import files from unofficial mirrors.
 
 Apply migrations in numerical order. Use a staging project first. Start with a narrow historical backfill and verify counts, timestamps, units, duplicate behavior and source status before scheduling production jobs. Keep secrets server-side. Do not schedule ingestion until the source access terms and retention requirements are reviewed.
+
+
+## Source health monitoring
+
+`lib/monitoring/source-health.ts` evaluates source freshness from an explicit `expectedIntervalMs` policy and persisted last-success / last-attempt metadata. It classifies disabled, license-blocked, never-successful, healthy, delayed, stale, failed and degraded sources, and emits structured alert codes for a downstream dashboard or notification worker. Cadence intervals must be configured per source; the monitor intentionally does not infer exact intervals from descriptive cadence strings such as `daily / weekly`. Alert delivery and scheduled polling remain deployment integrations.
