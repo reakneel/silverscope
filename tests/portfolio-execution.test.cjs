@@ -30,8 +30,9 @@ test("retains and reports residual target quantity when volume is insufficient",
 });
 test("requires synchronized marks and stable contract specifications", () => {
   assert.throws(() => simulatePortfolioExecution([
-    { timestamp: "2026-01-01", bars: [bar("SIH27", 1), bar("GCZ26", 0)] },
-    { timestamp: "2026-01-02", bars: [bar("SIH27", 1)] },
+    { timestamp: "2026-01-01", bars: [bar("SIH27", 1), bar("GCZ26", 1)] },
+    { timestamp: "2026-01-02", bars: [bar("SIH27", 1), bar("GCZ26", 1)] },
+    { timestamp: "2026-01-03", bars: [bar("SIH27", 1)] },
   ], opts), /Missing mark bar/);
   assert.throws(() => simulatePortfolioExecution([
     { timestamp: "2026-01-01", bars: [bar("SIH27", 1)] },
@@ -39,6 +40,10 @@ test("requires synchronized marks and stable contract specifications", () => {
   ], opts), /specification changed/);
 });
 test("rejects incoherent margin rates, invalid chronology and short positions when disabled", () => {
+  assert.throws(() => simulatePortfolioExecution([
+    { timestamp: "2026-01-01", bars: [{ ...bar("SIH27", 0), initialMarginRate: 0.1, maintenanceMarginRate: 0.2 }] },
+    { timestamp: "2026-01-02", bars: [bar("SIH27", 0)] },
+  ], opts), /Margin rates/);
   assert.throws(() => simulatePortfolioExecution([
     { timestamp: "2026-01-01", bars: [bar("SIH27", -1)] },
     { timestamp: "2026-01-02", bars: [bar("SIH27", -1)] },
