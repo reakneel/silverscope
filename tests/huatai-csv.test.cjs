@@ -58,9 +58,9 @@ test("computes SHA-256 over original bytes and enforces file size", () => {
 });
 
 test("interprets China exchange local time and fingerprints normalized records", () => {
-  const a = previewHuataiCsv(buffer("证券代码,持仓数量,证券名称\\n600000,100,浦发银行"), "holdings_snapshot");
-  const b = previewHuataiCsv(buffer("证券名称,证券代码,持仓数量\\n浦发银行,600000,100"), "holdings_snapshot");
+  const a = previewHuataiCsv(buffer("证券代码,持仓数量,证券名称\n600000,100,浦发银行"), "holdings_snapshot");
+  const b = previewHuataiCsv(buffer("证券名称,证券代码,持仓数量\n浦发银行,600000,100"), "holdings_snapshot");
   assert.equal(a.acceptedRows[0].fingerprint, b.acceptedRows[0].fingerprint);
-  const trade = previewHuataiCsv(buffer("成交日期,成交时间,证券代码,买卖标志,成交数量,成交金额\\n2026-11-19,09:31:00,600000,买入,100,910"), "executions");
+  const trade = previewHuataiCsv(buffer("成交日期,成交时间,证券代码,买卖标志,成交数量,成交金额\n2026-11-19,09:31:00,600000,买入,100,910"), "executions");
   assert.equal(trade.acceptedRows[0].normalized.tradeAt, "2026-11-19T01:31:00.000Z");
 });
