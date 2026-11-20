@@ -56,7 +56,9 @@
 
 ## P2 — Accounts and paid product
 - [x] Add Supabase password login/logout and secure HttpOnly session refresh endpoints
-- [ ] Enforce authentication on all protected dashboard pages and user-owned API resources
+- [x] Add Pro/Ultra-gated owner-scoped alert APIs with plan quotas
+- [x] Add Ultra-gated server-built point-in-time research run persistence
+- [ ] Enforce authentication on any future account-specific dashboard pages and remaining user-owned API resources
 - [x] Add server-side Free / Pro / Ultra entitlement resolver
 - [x] Add authenticated Stripe subscription checkout endpoint with configured Price IDs
 - [x] Add authenticated Stripe customer portal session endpoint
