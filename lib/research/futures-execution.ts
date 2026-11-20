@@ -14,6 +14,10 @@ export interface FuturesExecutionOptions {
   slippageBps: number;
   maxContracts: number;
   allowShort?: boolean;
+  /** Optional exchange / broker initial margin fraction of futures notional. */
+  initialMarginRate?: number;
+  /** Optional maintenance margin fraction; must not exceed initial margin. */
+  maintenanceMarginRate?: number;
 }
 export interface ExecutionFill {
   timestamp: string;
@@ -24,7 +28,7 @@ export interface ExecutionFill {
   fillPrice: number;
   commission: number;
   slippageCost: number;
-  reason: "rebalance" | "roll" | "final_liquidation";
+  reason: "rebalance" | "roll" | "final_liquidation" | "margin_liquidation";
 }
 export interface FuturesEquityPoint {
   timestamp: string;
@@ -32,6 +36,8 @@ export interface FuturesEquityPoint {
   contracts: number;
   close: number;
   turnover: number;
+  initialMargin: number;
+  maintenanceMargin: number;
 }
 export interface FuturesSimulationResult {
   initialCapital: number;
@@ -64,6 +70,13 @@ export function simulateFuturesExecution(
   nonNegative(options.commissionPerContractPerSide, "commissionPerContractPerSide");
   nonNegative(options.slippageBps, "slippageBps");
   if (!Number.isInteger(options.maxContracts) || options.maxContracts < 1) throw new Error("maxContracts must be a positive integer.");
+  const hasInitialMargin = options.initialMarginRate !== undefined;
+  const hasMaintenanceMargin = options.maintenanceMarginRate !== undefined;
+  if (hasInitialMargin !== hasMaintenanceMargin) throw new Error("Initial and maintenance margin rates must be supplied together.");
+  if (hasInitialMargin) {
+    const initial = options.initialMarginRate as number, maintenance = options.maintenanceMarginRate as number;
+    if (!Number.isFinite(initial) || !Number.isFinite(maintenance) || initial <= 0 || maintenance <= 0 || maintenance > initial || initial >= 1) throw new Error("Margin rates must satisfy 0 < maintenance <= initial < 1.");
+  }
   if (bars.length < 2) throw new Error("At least two bars are required to execute next-bar signals.");
   const dates = bars.map((bar) => Date.parse(bar.timestamp));
   for (let i = 0; i < bars.length; i++) {
@@ -91,6 +104,8 @@ export function simulateFuturesExecution(
     const quantity = Math.abs(delta);
     const slippageRate = options.slippageBps / 10_000;
     const fillPrice = referencePrice * (side === "buy" ? 1 + slippageRate : 1 - slippageRate);
+    const requiredInitial = Math.abs(target) * referencePrice * options.contractMultiplier * (options.initialMarginRate ?? 0);
+    if (requiredInitial > equity) throw new Error("Insufficient equity for initial margin requirement.");
     const commission = quantity * options.commissionPerContractPerSide;
     const slippageCost = Math.abs(fillPrice - referencePrice) * quantity * options.contractMultiplier;
     equity -= commission + slippageCost;
@@ -114,7 +129,13 @@ export function simulateFuturesExecution(
     }
     equity += position * (bar.close - bar.open) * options.contractMultiplier;
     if (equity <= 0) throw new Error("Simulation equity reached zero or below.");
-    equityCurve.push({ timestamp: bar.timestamp, equity, contracts: position, close: bar.close, turnover: tradedNotional / Math.max(equity, 1e-12) });
+    const initialMargin = Math.abs(position) * bar.close * options.contractMultiplier * (options.initialMarginRate ?? 0);
+    const maintenanceMargin = Math.abs(position) * bar.close * options.contractMultiplier * (options.maintenanceMarginRate ?? 0);
+    if (options.maintenanceMarginRate !== undefined && equity < maintenanceMargin) {
+      execute(bar.timestamp, bar.contractId, bar.close, 0, "margin_liquidation");
+      if (equity <= 0) throw new Error("Margin liquidation exhausted simulation equity.");
+    }
+    equityCurve.push({ timestamp: bar.timestamp, equity, contracts: position, close: bar.close, turnover: tradedNotional / Math.max(equity, 1e-12), initialMargin: Math.abs(position) * bar.close * options.contractMultiplier * (options.initialMarginRate ?? 0), maintenanceMargin: Math.abs(position) * bar.close * options.contractMultiplier * (options.maintenanceMarginRate ?? 0) });
   }
   const last = bars[bars.length - 1];
   execute(last.timestamp, last.contractId, last.close, 0, "final_liquidation");

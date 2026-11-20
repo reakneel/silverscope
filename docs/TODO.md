@@ -40,9 +40,13 @@
 - [ ] Automate official CME XLS ingestion after verifying a stable supported format and permitted access terms
 - [ ] Add LBMA holdings and vault data adapter after obtaining licensed data access
 - [ ] Add integration tests against a staging database
-- [x] Add foundational walk-forward splitter and cost-aware backtest metric primitives\n- [x] Add a single-contract next-bar futures execution simulator with multiplier P&L, commissions, slippage, position caps and forced final liquidation
+- [x] Add foundational walk-forward splitter and cost-aware backtest metric primitives
+- [x] Add a single-contract next-bar futures execution simulator with multiplier P&L, commissions, slippage, position caps and forced final liquidation
 - [x] Add strict point-in-time feature construction that rejects unknown / future publication timestamps
-- [x] Add explicit old-contract exit / new-contract entry prices to prevent roll-spread gaps from being booked as P&L\n- [ ] Add exchange expiry calendars, margin / liquidation rules and partial-fill constraints
+- [x] Add explicit old-contract exit / new-contract entry prices to prevent roll-spread gaps from being booked as P&L
+- [x] Add simplified initial / maintenance margin checks and maintenance liquidation to the single-contract simulator
+- [x] Add risk-budget and margin-aware integer position sizing
+- [ ] Add exchange expiry calendars, SPAN / broker margin schedules, intraday calls and partial-fill constraints
 - [ ] Build a multi-contract portfolio runner with order, roll, fee and slippage simulation
 - [ ] Add source freshness / ingestion failure monitoring and alerting
 
