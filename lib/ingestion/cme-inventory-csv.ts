@@ -42,7 +42,7 @@ function parseDate(value: string | undefined, fallback?: string): string {
 export interface CmeSilverStockParseOptions { reportDate?: string; fetchedAt?: string; }
 
 export function parseCmeSilverStocksCsv(csv: string, options: CmeSilverStockParseOptions = {}): Observation[] {
-  if (!csv.trim() || csv.length > 2_000_000) throw new Error("CSV is empty or exceeds the 2 MB import limit.");
+  if (!csv.trim() || new TextEncoder().encode(csv).length > 2_000_000) throw new Error("CSV is empty or exceeds the 2 MB import limit.");
   const rows = recordsFromCsv(csv);
   if (rows.length < 2) throw new Error("CSV must contain a header and at least one data row.");
   const headers = rows[0].map(key);
