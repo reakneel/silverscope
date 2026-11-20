@@ -96,7 +96,7 @@ function decode(buffer: ArrayBuffer): string {
   try { return new TextDecoder("gb18030", { fatal: false }).decode(bytes); }
   catch { return utf8; }
 }
-function canonicalValues(headers: string[], cells: string[], kind: ImportKind) {
+function canonicalValues(headers: string[], cells: string[], kind: ImportKind): { requiredError: string | null; normalized: Record<string, string | number | null> } {
   const value = (key: keyof typeof aliases) => {
     const index = findHeader(headers, key);
     return index < 0 ? undefined : cells[index];
