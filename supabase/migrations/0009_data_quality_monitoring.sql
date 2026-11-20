@@ -50,3 +50,7 @@ alter table public.source_health_checks enable row level security;
 alter table public.source_health_alerts enable row level security;
 alter table public.data_quality_checks enable row level security;
 revoke all on public.source_health_checks, public.source_health_alerts, public.data_quality_checks from anon, authenticated;
+
+-- CFTC Disaggregated Futures Only data is a public government dataset.
+update public.data_sources set license_status = 'public_api', updated_at = now() where id = 'cftc';
+grant select on public.observations, public.observation_archive to service_role;
