@@ -11,23 +11,29 @@
 - [x] Add application health endpoint
 - [x] Add FRED macro adapter and protected ingestion endpoint
 - [x] Add idempotent Supabase REST persistence path
+- [x] Add CFTC COMEX Silver positioning adapter and protected ingestion endpoint
+- [x] Add calibration-gated feature, score and signal snapshot pipeline
 - [ ] Apply migrations to a provisioned Supabase project
-- [ ] Verify production credentials and run a controlled ingestion
+- [ ] Verify production credentials and run controlled ingestion
 
 ## P1 — Data and quant foundation
-- [x] Design schema and migrations for sources, observations, indicators, scores and signals
+- [x] Design schema for sources, observations, indicators, scores and signals
 - [x] Build source registry and ingestion run contract
 - [x] Implement validation, freshness and provenance checks
 - [x] Implement normalization helper and coverage-aware composite score
-- [x] Add unit tests for score, validation and FRED adapter behavior
-- [x] Add FRED macro source adapter for DFII10, DTWEXBGS and DGS10
-- [x] Add protected ingestion route and deduplicated observation persistence
+- [x] Add unit tests for score, validation and ingestion adapters
+- [x] Add FRED source adapter for DFII10, DTWEXBGS and DGS10
+- [x] Add CFTC disaggregated futures-only COMEX Silver managed-money net adapter
+- [x] Add protected ingestion routes and deduplicated observation persistence
+- [x] Add calibration-driven feature generation and signal evidence snapshots
+- [x] Add score/signal snapshot idempotency constraints
 - [ ] Provision Supabase project and environments
 - [ ] Configure FRED API key and cron secret
+- [ ] Verify CFTC Silver API ingestion against live Supabase
 - [ ] Implement one verified silver spot source
-- [ ] Implement COMEX inventory ingestion
-- [ ] Add CFTC positioning source adapter
-- [ ] Persist score snapshots and signal evidence
+- [ ] Implement COMEX warehouse inventory ingestion
+- [ ] Add LBMA holdings and vault data adapter
+- [ ] Persist empirical calibration and model-version governance
 - [ ] Add integration tests against a staging database
 
 ## P2 — Accounts and paid product

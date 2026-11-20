@@ -2,19 +2,28 @@ import { NextResponse } from "next/server";
 import { SOURCE_REGISTRY } from "@/lib/data/source-registry";
 export const dynamic = "force-dynamic";
 export function GET() {
-  const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const databaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const clientDatabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const fredConfigured = Boolean(process.env.FRED_API_KEY);
   const cronConfigured = Boolean(process.env.CRON_SECRET);
-  const ingestionConfigured = supabaseConfigured && fredConfigured && cronConfigured;
+  const calibrationConfigured = Boolean(process.env.SILVER_FEATURE_CALIBRATION_JSON);
+  const fredIngestionConfigured = databaseConfigured && fredConfigured && cronConfigured;
+  const cftcIngestionConfigured = databaseConfigured && cronConfigured;
+  const scoringPipelineConfigured = databaseConfigured && cronConfigured && calibrationConfigured;
+  const allCoreConfigured = databaseConfigured && cronConfigured && calibrationConfigured;
   return NextResponse.json({
     service: "silverscope",
-    status: ingestionConfigured ? "ready" : "degraded",
+    status: allCoreConfigured ? "ready" : "degraded",
     checkedAt: new Date().toISOString(),
     capabilities: {
-      databaseConfigured: supabaseConfigured,
+      databaseConfigured,
+      clientDatabaseConfigured,
       fredApiKeyConfigured: fredConfigured,
       cronSecretConfigured: cronConfigured,
-      ingestionRouteConfigured: ingestionConfigured,
+      featureCalibrationConfigured: calibrationConfigured,
+      fredIngestionConfigured,
+      cftcIngestionConfigured,
+      scoringPipelineConfigured,
       registeredSources: SOURCE_REGISTRY.length,
       scoringEngine: "available",
       liveMarketData: false,
