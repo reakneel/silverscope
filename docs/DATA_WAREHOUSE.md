@@ -20,10 +20,10 @@ $env:SUPABASE_DB_URL = "your PostgreSQL connection URI"
 python ./scripts/db/cold-archive-observations.py --cutoff-days 365
 ~~~
 
-Verify a previously created archive offline:
+Verify a previously created archive offline, including the second-disk copy before deletion:
 
 ~~~powershell
-python ./scripts/db/cold-archive-observations.py --verify-archive ".\backups\cold-observations\silverscope-observations-before-YYYYMMDDTHHMMSSZ.csv.gz"
+python ./scripts/db/cold-archive-observations.py --verify-archive "E:\SilverScopeBackups\silverscope-observations-before-YYYYMMDDTHHMMSSffffffZ.csv.gz"
 ~~~
 
 Only after reviewing the archive and copying both the gzip file and its JSON manifest to a second independent location, explicitly allow source-row deletion using that already-created archive (the delete command does not create a new backup):
@@ -52,6 +52,8 @@ python ./scripts/db/cold-archive-observations.py --restore-local ".\backups\cold
 ~~~
 
 Restore refuses non-local hosts, inserts without overwriting conflicting dedupe keys, and verifies exact row hashes before commit. A conflict mismatch aborts and rolls back.
+
+The local cold archive is an operator-side research warehouse; it is not queried by the hosted application or the observation_history view. After deleting old rows from Supabase, cloud dashboards and hosted backtests see only the observations that remain in PostgreSQL. Use DuckDB against the cold files for full local-history analysis, or retain the source rows online if hosted historical research must continue.
 
 ### Query cold data with DuckDB
 
