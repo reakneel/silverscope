@@ -73,12 +73,12 @@ Open http://localhost:3000.
 The score engine accepts normalized feature scores, not raw market values in incompatible units. It withholds output when weighted indicator breadth, group count or confidence requirements are not met. With only the initial three FRED macro series and one CFTC positioning series, weighted coverage is 20%, so the model intentionally does not publish a composite score yet. Empirical calibration is required; the scoring endpoint will not manufacture calibration values.
 
 ## Database backups
-- See [docs/DATABASE_BACKUP.md](docs/DATABASE_BACKUP.md) for Windows PowerShell and macOS/Linux full PostgreSQL backup, SHA-256 verification, retention and local-only restore instructions.
-- Local dumps are written under `backups/supabase/` by default and are ignored by Git. Supabase Storage object bytes require a separate backup.
+- See [docs/DATABASE_BACKUP.md](docs/DATABASE_BACKUP.md) for PostgreSQL, Storage-object and historical-observation backup procedures.
+- Cold observation exports are read-only by default; `--apply-delete` is explicit and aborts unless the exact row IDs, row hashes and eligible row count still match the verified archive.
 
 ## Data warehouse, automation and local backups
-- Historical observations are exposed through `observation_history`; rows older than 365 days can be moved into monthly PostgreSQL partitions by the protected warehouse job.
-- Vercel cron schedules FRED/CFTC ingestion, source-health checks, data-quality snapshots and weekly warehouse archival. Only public FRED/CFTC feeds are automated; licensed price and CME inventory imports remain controlled.
+- Historical observations can be exported to a local compressed cold archive with SHA-256 and per-row fingerprints; deletion is opt-in and transactionally guarded.
+- Vercel cron schedules FRED/CFTC ingestion, source-health checks and data-quality snapshots. Automatic database archival is disabled until an independent local backup is verified. Only public FRED/CFTC feeds are automated; licensed price and CME inventory imports remain controlled.
 - See [docs/DATA_WAREHOUSE.md](docs/DATA_WAREHOUSE.md), [docs/MIGRATION_RECONCILIATION.md](docs/MIGRATION_RECONCILIATION.md) and [docs/DATABASE_BACKUP.md](docs/DATABASE_BACKUP.md) for operations and migration safety.
 
 ## Environment
