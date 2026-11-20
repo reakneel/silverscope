@@ -72,3 +72,13 @@ test("computes portfolio minus benchmark excess returns", () => {
     { asOf: "2026-01-02", excessPct: -3 },
   ]);
 });
+
+test("uses broker-reported unit price when snapshot market value is absent", () => {
+  const result = calculateAccountValuation({
+    holdings: [holding({ importedMarketValue: null, importedMarketPrice: 9.5 })],
+    cash: 50, currency: "CNY", asOf: null,
+  });
+  assert.equal(result.holdings[0].marketValue, 950);
+  assert.equal(result.holdings[0].valuationSource, "broker_snapshot");
+  assert.equal(result.account.totalAssets, 1000);
+});
