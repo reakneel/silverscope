@@ -21,8 +21,9 @@ async function count(path: string): Promise<number> {
   });
   if (!response.ok) throw new Error(`Supabase count failed (HTTP ${response.status}): ${(await response.text()).slice(0, 200)}`);
   const range = response.headers.get("content-range") ?? "";
+  if (!range.includes("/")) throw new Error("Supabase did not return an exact count.");
   const total = Number(range.split("/").pop());
-  if (!Number.isFinite(total)) throw new Error("Supabase did not return an exact count.");
+  if (!Number.isFinite(total)) throw new Error("Supabase returned an invalid exact count.");
   return total;
 }
 async function rest(path: string, method = "GET", body?: unknown, prefer?: string) {
