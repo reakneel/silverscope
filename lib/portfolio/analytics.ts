@@ -83,7 +83,7 @@ export function calculateAccountValuation(args: {
       cash: finite(args.cash) ? args.cash : null,
       positionsValue,
       totalAssets,
-      completeness: rows.length === 0 ? 0 : validValues.length / rows.length,
+      completeness: (validValues.length + (finite(args.cash) ? 1 : 0)) / (rows.length + 1),
       status: complete ? "complete" : partial ? "partial" : "unavailable",
       asOf: args.asOf,
     },
