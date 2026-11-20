@@ -49,8 +49,8 @@
 - [ ] Add exchange expiry calendars, SPAN / broker margin schedules and intraday margin calls
 - [x] Add bar-volume participation constrained order-fill primitive with explicit residual quantity
 - [x] Add multi-contract portfolio exposure and additive-margin risk snapshot with configurable limits
-- [ ] Integrate partial fills into persistent multi-contract order/roll lifecycle
-- [ ] Build a full multi-contract portfolio runner with shared cash/equity, persistent orders, roll, fee and slippage simulation
+- [x] Integrate volume-limited partial fills into persistent multi-contract target orders and synchronized contract rolls
+- [x] Build a shared-equity multi-contract portfolio runner with persistent target orders, separate contract roll fills, fees, slippage and margin controls
 - [ ] Add source freshness / ingestion failure monitoring and alerting
 
 ## P2 — Accounts and paid product

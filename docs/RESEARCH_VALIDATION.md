@@ -14,6 +14,7 @@
 - `adjustPValuesBonferroni`: family-wise error correction across a declared set of tested hypotheses.
 - `evaluatePortfolioScenarios`: per-contract percentage price shocks with marked P&L, stressed notional and initial/maintenance margin shortfalls.
 - `evaluateCostSensitivity`: reruns a fixed equity/turnover path under explicit transaction-cost assumptions.
+- `simulatePortfolioExecution`: synchronized multi-contract bars, shared equity, next-frame target execution, volume participation, initial-margin admission, maintenance liquidation and residual final positions.
 - `buildPointInTimeFeatureSignals`: strict historical feature construction requiring verified observations with known publication timestamps no later than the decision time.
 
 These are deterministic research primitives. They do not establish that a strategy is profitable or reproduce a complete exchange matching engine.
@@ -27,6 +28,12 @@ A contract change requires an explicit `rollFromPrice` representing the old cont
 Initial and maintenance margin rates are optional but must be supplied together. Initial margin is checked before increasing/opening a position. Equity is checked against maintenance margin after each bar mark; if breached, the simulator liquidates at that bar's close with configured slippage and commission. These are simplified percentage-of-notional assumptions, not exchange-specific SPAN or broker house-margin rules.
 
 The position-sizing helper estimates risk as stop distance multiplied by contract multiplier. It floors to whole contracts and applies both risk-budget and initial-margin constraints. It does not guarantee the stop can execute at its stated price; gaps and liquidity can cause larger losses.
+
+## Multi-contract execution assumptions
+
+The portfolio runner requires synchronized frames containing a mark bar for every open contract and an execution bar for every outstanding non-zero target. Close targets execute at the next frame open. Each contract's fill quantity is capped by `floor(volume * maxParticipationRate)`; residual target quantity remains outstanding and is recalculated against the next close target. Contract multipliers, commissions and margin rates must remain stable for each contract ID. A roll is represented as two separate contract positions: close the old contract and open the new contract using their own executable bars; the spread gap is not booked as P&L. Initial margin limits new exposure, maintenance breaches trigger volume-limited close orders, and final liquidation may leave explicit residual open positions if bar capacity is insufficient. The runner never reports a portfolio as flat when residual contracts remain.
+
+The runner is a synchronized OHLCV bar model, not a complete exchange matching engine. It does not model order-book queues, intrabar ordering, bid/ask spread, market impact, funding, exchange expiry calendars, SPAN, broker house margin, cross-margin credits or FX conversion.
 
 ## Scenario analysis and execution-cost sensitivity
 
