@@ -183,6 +183,24 @@ def create_archive(args: argparse.Namespace) -> Path:
     database_url = os.environ.get("SUPABASE_DB_URL", "").strip()
     if not database_url:
         raise RuntimeError("Set SUPABASE_DB_URL in your local environment.")
+    if args.apply_delete:
+        if not args.archive_file:
+            raise RuntimeError("--apply-delete requires --archive-file pointing to an existing, reviewed archive.")
+        archive_path = args.archive_file.expanduser().resolve()
+        manifest = validate_archive(archive_path)
+        if manifest.get("deleteApplied"):
+            raise RuntimeError("This archive manifest is already marked as applied.")
+        cutoff = manifest.get("cutoff")
+        if not cutoff:
+            raise RuntimeError("Archive manifest has no cutoff; refusing source deletion.")
+        delete_archived_rows(database_url, archive_path, str(cutoff))
+        manifest["deleteApplied"] = True
+        manifest["deletedAt"] = datetime.now(timezone.utc).isoformat()
+        atomic_json(Path(str(archive_path) + ".json"), manifest)
+        print(f"Deleted {manifest['rowCount']} source rows only after exact ID/hash/count parity passed.")
+        return archive_path
+    if args.archive_file:
+        raise RuntimeError("--archive-file is only used together with --apply-delete.")
     if args.cutoff_days < 1:
         raise RuntimeError("--cutoff-days must be at least 1.")
     cutoff = (datetime.now(timezone.utc) - timedelta(days=args.cutoff_days)).replace(microsecond=0).isoformat()
@@ -267,17 +285,7 @@ def create_archive(args: argparse.Namespace) -> Path:
     validate_archive(archive_path)
     print(f"Verified cold archive: {archive_path}")
     print(f"Rows: {row_count}; SHA-256: {digest}")
-    if args.apply_delete:
-        if row_count == 0:
-            print("No eligible observations; nothing to delete.")
-        else:
-            delete_archived_rows(database_url, archive_path, cutoff)
-            manifest["deleteApplied"] = True
-            manifest["deletedAt"] = datetime.now(timezone.utc).isoformat()
-            atomic_json(Path(str(archive_path) + ".json"), manifest)
-            print(f"Deleted {row_count} source rows only after exact ID/hash/count parity passed.")
-    else:
-        print("Dry-run mode: source rows were not modified. Re-run with --apply-delete only after reviewing the verified archive.")
+    print("Read-only export complete: source rows were not modified. Review and independently copy the archive before any deletion.")
     return archive_path
 
 
@@ -285,7 +293,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="backups/cold-observations")
     parser.add_argument("--cutoff-days", type=int, default=365)
-    parser.add_argument("--apply-delete", action="store_true", help="Delete only the exact rows in the verified archive; abort if the eligible set changed.")
+    parser.add_argument("--apply-delete", action="store_true", help="Delete only rows in a previously exported and verified archive.")
+    parser.add_argument("--archive-file", type=Path, help="Existing cold archive to verify and optionally apply; required with --apply-delete.")
     parser.add_argument("--verify-archive", type=Path, help="Verify an existing archive and manifest without connecting to the database.")
     parser.add_argument("--restore-local", type=Path, help="Restore an archive into a local PostgreSQL database; set RESTORE_DATABASE_URL.")
     args = parser.parse_args()
