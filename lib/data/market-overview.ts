@@ -30,7 +30,7 @@ export async function getMarketOverview(options: MarketOverviewOptions = {}): Pr
     return response.json() as Promise<unknown>;
   };
   try {
-    const indicatorKeys = ["cftc_managed_money_net", "us_10y_real_yield", "us_10y_nominal_yield", "us_dollar_index"];
+    const indicatorKeys = ["cftc_managed_money_net", "us_10y_real_yield", "us_10y_nominal_yield", "us_dollar_index", "comex_registered_stocks", "comex_eligible_stocks", "comex_total_stocks"];
     const observationRequests = indicatorKeys.map((key) => {
       const query = new URLSearchParams({
         select: "source_id,indicator_key,value,unit,observed_at,fetched_at,status",
