@@ -12,7 +12,8 @@
     "db:backup": "bash scripts/db/backup-supabase.sh",
     "db:restore:local": "bash scripts/db/restore-local.sh",
     "db:storage:backup": "python scripts/db/sync-supabase-storage.py",
-    "db:warehouse:archive": "node scripts/db/archive-warehouse.mjs"
+    "db:warehouse:archive": "node scripts/db/archive-warehouse.mjs",
+    "db:cold-archive": "python scripts/db/cold-archive-observations.py"
   },
   "dependencies": {
     "next": "^15.5.4",
