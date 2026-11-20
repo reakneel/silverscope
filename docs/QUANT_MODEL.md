@@ -47,5 +47,10 @@ Example schema only (values are deliberately placeholders and must not be deploy
 - Maximum observation age: 45 days.
 - Composite regime: bullish >= 60, bearish <= 40, otherwise neutral.
 
+## Research validation primitives
+The research library now provides a cost-aware equity-curve evaluator and chronological walk-forward fold generator. The evaluator reports total return, CAGR, annualized volatility, Sharpe, Sortino, maximum drawdown, Calmar, win rate and optional benchmark return. Trading costs are applied from per-period turnover and an explicit basis-point assumption; the risk-free rate and annualization frequency are also explicit inputs. Undefined ratios remain null when their denominators are zero.
+
+The walk-forward splitter supports expanding or rolling training windows, test windows, step sizes and an embargo gap. It only partitions chronologically ordered observations; it does not fit models, generate trades, select parameters or guarantee unbiased results. A complete strategy runner still needs point-in-time feature construction, order execution assumptions, corporate / contract roll handling, and out-of-sample evaluation.
+
 ## Interpretation
 A score is a normalized market-state classification. It is not a probability of profit, a return forecast, or a buy/sell instruction. A signal records the model version, component evidence, accepted inputs and invalidation conditions. Historical performance claims require point-in-time data, walk-forward validation, transaction costs and out-of-sample reporting.
