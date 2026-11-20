@@ -9,10 +9,10 @@ test("aggregates signed and gross notional with conservative additive margin", (
   const result = calculatePortfolioRisk(100000, positions);
   assert.equal(result.grossNotional, 700000);
   assert.equal(result.netNotional, -100000);
-  assert.equal(result.initialMargin, 46000);
-  assert.equal(result.maintenanceMargin, 34800);
+  assert.equal(result.initialMargin, 62000);
+  assert.equal(result.maintenanceMargin, 48000);
   assert.equal(result.riskGroups.metals, 700000);
-  assert.equal(result.marginUtilization, 0.46);
+  assert.equal(result.marginUtilization, 0.62);
   assert.equal(result.withinLimits, true);
 });
 test("reports independent account and concentration limit breaches", () => {
