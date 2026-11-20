@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     const publicationCoverage = observations > 0 ? (observations - missingPublishedAt) / observations : null;
     const status = observations === 0 ? "insufficient_data" : (rejectedRatio !== null && rejectedRatio > 0.05 ? "degraded" : "healthy");
     const metrics = {
-      windowDays: 30, ingestionRuns: runs?.length ?? 0, pointInTimeEligibleObservations: observations - missingPublishedAt,
+      windowDays: 30, ingestionRuns: runs?.length ?? 0, observationsWithPublicationTimestamp: observations - missingPublishedAt,
       pointInTimePublicationTimestampCoverage: publicationCoverage,
       note: "Missing published_at is reported as a point-in-time limitation, not silently inferred from observed_at.",
     };
