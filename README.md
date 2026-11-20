@@ -57,6 +57,7 @@ Open http://localhost:3000.
 - lib/research/position-sizing.ts — risk-budget and initial-margin constrained contract sizing
 - lib/research/volume-execution.ts — bar-volume participation constrained fills with explicit residual quantity
 - lib/research/portfolio-risk.ts — conservative multi-contract exposure, additive margin and limit aggregation
+- lib/research/snapshot.ts — canonical SHA-256 point-in-time research snapshots and versioned experiment manifests
 - lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
