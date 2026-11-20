@@ -62,7 +62,7 @@ Copy .env.example to .env.local. FRED ingestion requires FRED_API_KEY, NEXT_PUBL
 Every production observation preserves source, observed/published/fetched timestamps, unit, status and confidence. FRED and CFTC report APIs do not provide an exact publication timestamp in the observation payload used here, so published_at is left null. Raw observations are deduplicated and never silently overwritten with guessed values. CFTC positioning is Tuesday-as-of data, not Friday publication-time data.
 
 ## Documentation
-See docs/ARCHITECTURE.md, docs/DATA_SOURCES.md, docs/INGESTION.md, docs/QUANT_MODEL.md, docs/SUPABASE.md and docs/TODO.md.
+See docs/ARCHITECTURE.md, docs/DATA_SOURCES.md, docs/INGESTION.md, docs/QUANT_MODEL.md, docs/RESEARCH_VALIDATION.md, docs/SUPABASE.md and docs/TODO.md.
 
 ## Disclaimer
 SilverScope is intended as a general market research and information tool. It is not personalized investment advice, a solicitation, or a guarantee of trading outcomes. Regulatory review is required before offering paid signals or strategy features in any target jurisdiction.
