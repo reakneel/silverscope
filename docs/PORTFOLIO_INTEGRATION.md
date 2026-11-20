@@ -135,3 +135,28 @@ Do not migrate lib/seed.ts data, seeded NAV/return series, demo account snapshot
 5. Migrate portfolio-console UI and calculations into SilverScope, replacing all seeded data and fallback paths.
 6. Run end-to-end reconciliation with user-confirmed real exports and verify production monitoring.
 7. Keep portfolio-console read-only during an acceptance window; archive only after explicit sign-off. Do not delete repository history.
+
+
+## Implementation status — 2026-11-20
+
+Merged into SilverScope main:
+- PR #22: this integration blueprint and repository ownership decision.
+- PR #23: portfolio account/import/ledger/valuation tables and private source-file bucket migrations (0010 and 0011). These migrations are code only; they have not been applied to Supabase.
+- PR #24: Portfolio workspace, account management, and authenticated Huatai CSV/TSV preview. Preview is in-memory only; no source file or ledger rows are persisted.
+- PR #25: source-aware valuation, drawdown and excess-return calculation core with missing-data and currency safeguards.
+- PR #26: broker-reported market price field on position snapshots (migration 0012). Not applied to Supabase.
+- PR #27: owner-scoped latest position/cash read API and real-data dashboard panel. No demo fallback.
+- PR #28 (this change): transaction-history API and UI for real broker executions and cash-affecting events.
+
+## Remaining release gates
+
+1. Reconcile the remote Supabase migration history. The repository still has duplicate 0006 migration prefixes; do not run `supabase db push` until the remote `supabase_migrations.schema_migrations` state is inspected.
+2. Complete and verify a full PostgreSQL backup/restore drill and a separate Supabase Storage object backup before applying migrations.
+3. Configure the SilverScope Vercel production/preview environment with the required Supabase URL, anon key, service-role key and cron secret. The Vercel project currently reports no configured environment variables; no production deploy has been made for the portfolio work.
+4. Obtain a sanitized real Huatai export sample to validate actual column names, encoding, timezone, transaction identifiers, fees and statement dates. Current parser aliases are provisional.
+5. Implement and verify a confirmed import/commit pipeline for holdings, executions and cash statements. The current import UI is preview-only.
+6. Add approved stock quote and FX sources before calculating live market valuation or aggregating foreign-currency assets. Broker statement snapshots remain the only available valuation basis until then.
+7. Import and reconcile real statements, verify RLS isolation and duplicate/overlap handling, then migrate the remaining portfolio-console charts/events/earnings features using only real source data.
+8. Keep portfolio-console unarchived until production acceptance and an explicit user sign-off.
+
+No production database cleanup, migration, data ingestion, backup/restore, deployment, or portfolio-console archival is claimed as completed by this code status.

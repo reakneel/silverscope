@@ -27,14 +27,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="nav-label">WORKSPACE</div>
             <nav>{nav.map(({ href, label, icon: Icon }) => <Link key={href} href={href} className="nav-link"><Icon size={17}/>{label}</Link>)}</nav>
             <div className="sidebar-bottom">
-              <div className="status-dot"/><span>Research demo environment</span>
-              <p>Data feeds are not connected. Values shown are illustrative only.</p>
+              <div className="status-dot"/><span>Research workspace</span>
+              <p>Data feeds are not connected. Values remain blank until a verified source is available.</p>
             </div>
           </aside>
           <main className="main-area">
             <header className="topbar"><div className="mobile-brand">SilverScope</div><div className="topbar-right"><span className="market-pill"><Activity size={14}/> MARKET MONITOR</span><button className="icon-button" aria-label="Notifications"><Bell size={17}/></button><SessionMenu authConfigured={Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)} /></div></header>
             {children}
-            <footer className="footer">SilverScope is a market research tool, not investment advice. Demo values are illustrative and are not live market data.</footer>
+            <footer className="footer">SilverScope is a market research tool, not investment advice. Market and portfolio values are shown only when source data is available and verified.</footer>
           </main>
         </div>
       </body>

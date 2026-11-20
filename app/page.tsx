@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   const componentMap = new Map((score?.components ?? []).map((component) => [component.group, component.score]));
   const live = Object.keys(overview.observations).length > 0 || Boolean(score);
   return <div className="page-wrap">
-    <div className="page-heading"><div><div className="eyebrow">RESEARCH WORKSPACE</div><h1>Market overview</h1><p>Understand what is moving silver — and what could change next.</p></div><span className="demo-tag"><span/> {live ? "OBSERVATIONS AVAILABLE" : "DEMO · NO LIVE FEED"}</span></div>
+    <div className="page-heading"><div><div className="eyebrow">RESEARCH WORKSPACE</div><h1>Market overview</h1><p>Understand what is moving silver — and what could change next.</p></div><span className="demo-tag"><span/> {live ? "OBSERVATIONS AVAILABLE" : "NO LIVE FEED"}</span></div>
     <section className="metric-grid">
       <article className="metric-card"><div className="metric-label">Silver spot</div><div className="metric-value">{silverSpot ? `${number(silverSpot.value)}` : "$—"}</div><div className="metric-change muted">{silverSpot ? `USD/oz · as of ${silverSpot.observedAt.slice(0, 10)}` : "Licensed price feed not connected"}</div></article>
       <article className="metric-card"><div className="metric-label">SilverScope score</div><div className="metric-value">{score ? `${number(score.score)} / 100` : "— / 100"}</div><div className="metric-change muted">{score ? `Coverage ${number(score.coverage * 100, 0)}% · ${score.modelVersion}` : "Awaiting calibrated inputs"}</div></article>
