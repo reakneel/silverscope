@@ -25,7 +25,7 @@ test("detects maintenance breach and insolvency without hiding negative equity",
 });
 test("validates scenario identities and shocks", () => {
   assert.throws(() => evaluatePortfolioScenarios(100000, positions, [{ id: "bad", priceShockPct: { unknown: -0.1 } }]), /Unknown contract/);
-  assert.throws(() => evaluatePortfolioScenarios(100000, positions, [{ id: "bad", priceShockPct: { SIH27: -1 } }]), /> -100%/);
+  assert.throws(() => evaluatePortfolioScenarios(100000, positions, [{ id: "bad", priceShockPct: { SIH27: -1 } }]), /greater than -100%/);
 });
 test("cost sensitivity monotonically charges greater turnover costs", () => {
   const points = [
