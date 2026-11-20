@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-quant.cjs"
+    "test": "node scripts/test-quant.cjs",
+    "db:backup": "bash scripts/db/backup-supabase.sh",
+    "db:restore:local": "bash scripts/db/restore-local.sh"
   },
   "dependencies": {
     "next": "^15.5.4",

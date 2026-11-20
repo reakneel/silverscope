@@ -6,3 +6,9 @@ out
 .vercel
 .test-build
 coverage
+
+# Local database dumps and backup secrets
+backups/
+.env.backup
+.env.backup.*
+!.env.backup.example
