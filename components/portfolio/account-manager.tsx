@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Account = { id: string; provider: string; account_kind: string; display_name: string; account_ref_masked: string | null; base_currency: string; markets: string[]; status: string };
-const labels: Record<string, string> = { huatai: "华泰证券", tonghuashun: "同花顺", other_broker: "其他券商", xueqiu: "雪球组合" };
+const labels: Record<string, string> = { huatai: "华泰证券", other_broker: "其他券商", xueqiu: "雪球组合" };
 
 export function PortfolioAccountManager() {
   const [accounts, setAccounts] = useState<Account[]>([]);
