@@ -39,3 +39,19 @@ test("creates only scored signal snapshots and preserves evidence", () => {
   assert.equal(signal.direction, "bullish");
   assert.equal(signal.evidence.classificationOnly, true);
 });
+
+test("does not count derived COMEX total as independent inventory evidence", () => {
+  const inventoryCalibrations = [
+    { indicatorKey: "comex_registered_stocks", group: "inventory_liquidity", mean: 100, standardDeviation: 10, direction: -1 },
+    { indicatorKey: "comex_eligible_stocks", group: "inventory_liquidity", mean: 200, standardDeviation: 20, direction: -1 },
+    { indicatorKey: "comex_total_stocks", group: "inventory_liquidity", mean: 300, standardDeviation: 30, direction: -1 },
+  ];
+  const rows = inventoryCalibrations.map((item) => ({
+    sourceId: "cme-comex", indicatorKey: item.indicatorKey, value: item.mean, unit: "oz",
+    observedAt: "2026-11-20T00:00:00.000Z", publishedAt: null,
+    fetchedAt: "2026-11-20T01:00:00.000Z", confidence: 0.98, status: "verified",
+  }));
+  const result = buildFeatureSignals(rows, inventoryCalibrations);
+  assert.deepEqual(result.features.map((feature) => feature.key), ["comex_registered_stocks", "comex_eligible_stocks"]);
+  assert.deepEqual(result.skipped, [{ indicatorKey: "comex_total_stocks", reason: "derived_not_independent" }]);
+});
