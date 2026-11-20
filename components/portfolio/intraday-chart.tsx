@@ -1,0 +1,16 @@
+"use client";
+import { useEffect,useMemo,useState } from "react";
+type Point={time:string;totalValue:number|null;positionsValue:number|null;cashValue:number|null;completeness:number;status:string};
+export function PortfolioIntradayChart({accountId,currency}:{accountId:string;currency:string}){
+ const [days,setDays]=useState(1);const [points,setPoints]=useState<Point[]>([]);const [error,setError]=useState("");const [loading,setLoading]=useState(true);const [updatedAt,setUpdatedAt]=useState<string|null>(null);
+ useEffect(()=>{let active=true;let first=true;const load=async()=>{if(first)setLoading(true);try{const r=await fetch(`/api/portfolio/performance?accountId=${encodeURIComponent(accountId)}&days=${days}`,{cache:"no-store"});const j=await r.json();if(!r.ok)throw new Error(j.error||"曲线暂不可用");if(active){setPoints(j.points||[]);setError("");setUpdatedAt(new Date().toISOString());}}catch(e){if(active)setError(e instanceof Error?e.message:"曲线暂不可用");}finally{if(active){setLoading(false);first=false;}}};void load();const timer=setInterval(()=>void load(),60_000);return()=>{active=false;clearInterval(timer);};},[accountId,days]);
+ const valid=useMemo(()=>points.filter(p=>p.totalValue!==null&&Number.isFinite(p.totalValue)),[points]);const values=valid.map(p=>p.totalValue as number);const min=Math.min(...values),max=Math.max(...values),span=max-min||Math.max(Math.abs(max)*.01,1);
+ const coords=valid.map((p,i)=>({x:valid.length<2?20:20+i*560/(valid.length-1),y:150-((p.totalValue as number)-min)/span*120}));const line=coords.map(p=>p.x+","+p.y).join(" ");
+ const money=(v:number)=>new Intl.NumberFormat("zh-CN",{style:"currency",currency,maximumFractionDigits:2}).format(v);
+ return <section className="panel portfolio-intraday"><div className="panel-heading"><div><h3>组合净值曲线</h3><p>自动每分钟刷新；仅绘制已保存的真实估值快照</p></div><select className="auth-input" value={days} onChange={e=>setDays(Number(e.target.value))}><option value={1}>日内</option><option value={7}>近 7 日</option><option value={30}>近 30 日</option></select></div>
+ {loading?<p className="muted">读取净值序列…</p>:error?<p className="muted">曲线读取失败：{error}</p>:valid.length===0?<div className="notice"><strong>暂无可绘制的真实净值点</strong><p>当前尚无估值快照。接入合规行情并持续写入估值快照后，这里会显示组合日内曲线；不会生成模拟走势。</p></div>:<>
+ <div className="portfolio-preview-stats"><div><span>最新净值</span><strong>{money(values[values.length-1])}</strong></div><div><span>区间变化</span><strong>{valid.length>1?((values[values.length-1]/values[0]-1)*100).toFixed(2)+"%":"—"}</strong></div><div><span>有效采样</span><strong>{valid.length}</strong></div></div>
+ <svg viewBox="0 0 600 180" role="img" aria-label="组合净值曲线" style={{width:"100%",height:"auto",overflow:"visible"}}><line x1="20" y1="150" x2="580" y2="150" stroke="currentColor" opacity=".2"/><line x1="20" y1="90" x2="580" y2="90" stroke="currentColor" opacity=".12"/>{coords.length>1&&<polyline points={line} fill="none" stroke="var(--accent,#7c9cff)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/>}{coords.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--accent,#7c9cff)"/>)}</svg>
+ <p className="muted portfolio-hash">最新采样：{new Date(valid[valid.length-1].time).toLocaleString()} · 状态：{valid[valid.length-1].status} · 最近刷新：{updatedAt?new Date(updatedAt).toLocaleTimeString():"—"}</p>
+ </>}</section>;
+}
