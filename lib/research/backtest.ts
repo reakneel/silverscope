@@ -45,11 +45,14 @@ export function calculateBacktestMetrics(points: EquityPoint[], options: Backtes
 
   const dates = points.map((point) => Date.parse(point.timestamp));
   for (let i = 0; i < points.length; i++) {
-    assertFinitePositive(points[i].equity, "equity");
+    const point = points[i];
+    if (!point) throw new Error("Equity points contain an invalid row.");
+    assertFinitePositive(point.equity, "equity");
     if (!Number.isFinite(dates[i])) throw new Error("Every timestamp must be a valid date.");
     if (i > 0 && dates[i] <= dates[i - 1]) throw new Error("Equity points must be strictly chronological and unique.");
-    if (points[i].benchmarkEquity !== undefined) assertFinitePositive(points[i].benchmarkEquity, "benchmarkEquity");
-    if (points[i].turnover !== undefined && (!Number.isFinite(points[i].turnover) || points[i].turnover < 0)) {
+    if (point.benchmarkEquity !== undefined) assertFinitePositive(point.benchmarkEquity, "benchmarkEquity");
+    const turnover = point.turnover;
+    if (turnover !== undefined && (!Number.isFinite(turnover) || turnover < 0)) {
       throw new Error("turnover must be finite and non-negative.");
     }
   }
