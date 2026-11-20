@@ -48,10 +48,12 @@ export function calculateAccountValuation(args: {
     const costValue = validQuantity && finite(holding.costBasis) && holding.costBasis >= 0
       ? holding.quantity * holding.costBasis : null;
     const sameCurrency = holding.currency === args.currency;
-    const useSnapshot = sameCurrency && validQuantity && finite(holding.importedMarketValue) && holding.importedMarketValue >= 0;
+    const hasSnapshotValue = finite(holding.importedMarketValue) && holding.importedMarketValue >= 0;
+    const hasSnapshotPrice = finite(holding.importedMarketPrice) && holding.importedMarketPrice >= 0;
+    const useSnapshot = sameCurrency && validQuantity && (hasSnapshotValue || hasSnapshotPrice);
     const useQuote = sameCurrency && validQuantity && !useSnapshot && holding.quoteStatus === "verified" && finite(holding.quotePrice) && holding.quotePrice >= 0;
     const marketValue = !validQuantity ? null
-      : useSnapshot ? holding.importedMarketValue
+      : useSnapshot ? (hasSnapshotValue ? holding.importedMarketValue : holding.quantity * holding.importedMarketPrice!)
       : useQuote ? holding.quantity * holding.quotePrice! : null;
     const unrealizedPnl = finite(marketValue) && finite(costValue) ? marketValue - costValue : null;
     const unrealizedPnlPct = finite(unrealizedPnl) && finite(costValue) && costValue > 0

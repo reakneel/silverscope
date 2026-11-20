@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentSupabaseUser } from "@/lib/auth/supabase-session";
 import { HuataiImportPanel } from "@/components/portfolio/huatai-import-panel";
+import { PortfolioDashboardPanel } from "@/components/portfolio/dashboard-panel";
 import { PortfolioAccountManager } from "@/components/portfolio/account-manager";
 
 export const dynamic = "force-dynamic";
@@ -12,14 +13,8 @@ export default async function PortfolioPage() {
       <div><div className="eyebrow">PERSONAL ACCOUNT WORKSPACE</div><h1>Portfolio</h1><p>Brokerage ledger, source reconciliation and portfolio performance.</p></div>
       <span className="demo-tag"><span/> REAL DATA ONLY</span>
     </div>
-    <section className="metric-grid portfolio-metrics">
-      <article className="metric-card"><div className="metric-label">Account assets</div><div className="metric-value">—</div><div className="metric-change muted">Not connected · no fabricated values</div></article>
-      <article className="metric-card"><div className="metric-label">Holdings</div><div className="metric-value">—</div><div className="metric-change muted">Awaiting verified broker snapshot</div></article>
-      <article className="metric-card"><div className="metric-label">Cash balance</div><div className="metric-value">—</div><div className="metric-change muted">Awaiting broker cash statement</div></article>
-      <article className="metric-card"><div className="metric-label">Portfolio return</div><div className="metric-value">—</div><div className="metric-change muted">Requires reconciled ledger and quotes</div></article>
-    </section>
     {!user ? <section className="panel"><h2>Sign in to continue</h2><p className="muted">Portfolio accounts and imported statements are private to the signed-in user.</p><Link className="button-primary portfolio-link" href="/login">Sign in</Link></section> : <>
-      <section className="notice"><strong>Account data is not connected</strong><p>There are no verified Huatai holdings, cash balances or executions in this workspace yet. Values remain blank until source statements are imported and reconciled.</p></section>
+      <PortfolioDashboardPanel />
       <div className="portfolio-grid">
         <PortfolioAccountManager />
         <HuataiImportPanel />
