@@ -107,7 +107,7 @@ def delete_archived_rows(database_url: str, archive_path: Path, cutoff: str) -> 
         copy_path = psql_copy_path(plain)
         sql = f"""BEGIN;
 CREATE TEMP TABLE _silverscope_archive_rows(row_json jsonb NOT NULL) ON COMMIT DROP;
-\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
+\\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
 SELECT set_config('silverscope.archive_cutoff', '{cutoff}', true);
 LOCK TABLE public.observations IN SHARE ROW EXCLUSIVE MODE;
 DO $$
@@ -193,6 +193,8 @@ def create_archive(args: argparse.Namespace) -> Path:
         cutoff = manifest.get("cutoff")
         if not cutoff:
             raise RuntimeError("Archive manifest has no cutoff; refusing source deletion.")
+        manifest["deleteStartedAt"] = datetime.now(timezone.utc).isoformat()
+        atomic_json(Path(str(archive_path) + ".json"), manifest)
         delete_archived_rows(database_url, archive_path, str(cutoff))
         manifest["deleteApplied"] = True
         manifest["deletedAt"] = datetime.now(timezone.utc).isoformat()
