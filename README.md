@@ -53,7 +53,8 @@ Open http://localhost:3000.
 - lib/quant/supabase-pipeline.ts — historical observation retrieval and idempotent score persistence
 - lib/research/backtest.ts — net return and risk metrics with explicit assumptions
 - lib/research/walk-forward.ts — chronological expanding / rolling folds with embargo
-- lib/research/futures-execution.ts — next-bar futures execution, fees, slippage and explicit roll prices
+- lib/research/futures-execution.ts — next-bar futures execution, fees, slippage, explicit rolls and simplified margin liquidation
+- lib/research/position-sizing.ts — risk-budget and initial-margin constrained contract sizing
 - lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
