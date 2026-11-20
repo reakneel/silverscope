@@ -51,7 +51,8 @@
 - [x] Add multi-contract portfolio exposure and additive-margin risk snapshot with configurable limits
 - [x] Integrate volume-limited partial fills into persistent multi-contract target orders and synchronized contract rolls
 - [x] Build a shared-equity multi-contract portfolio runner with persistent target orders, separate contract roll fills, fees, slippage and margin controls
-- [ ] Add source freshness / ingestion failure monitoring and alerting
+- [x] Add explicit-cadence source freshness and ingestion health classification with structured alerts
+- [ ] Wire scheduled health polling, persisted alert state and email / in-app delivery
 
 ## P2 — Accounts and paid product
 - [ ] Supabase Auth and protected dashboard
