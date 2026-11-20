@@ -44,7 +44,7 @@ python ./scripts/db/cold-archive-observations.py --cutoff-days 365
 python ./scripts/db/cold-archive-observations.py --verify-archive ".\backups\cold-observations\archive.csv.gz"
 ~~~
 
-Only use --apply-delete after reviewing the generated archive and copying it to a second independent location. The script verifies SHA-256, gzip/CSV/JSON structure, row count, unique IDs, current row hashes and the complete eligible set inside one transaction. If a row changed, disappeared, or a new eligible row appeared after export, deletion aborts and rolls back. The local archive is never automatically pruned.
+Only use --apply-delete --archive-file after reviewing an existing generated archive and copying both the gzip file and its JSON manifest to a second independent location. The destructive command never generates a fresh archive implicitly. The script verifies SHA-256, gzip/CSV/JSON structure, row count, unique IDs, current row hashes and the complete eligible set inside one transaction. If a row changed, disappeared, or a new eligible row appeared after export, deletion aborts and rolls back. The local archive is never automatically pruned.
 
 Restore a cold archive only to a local database:
 
