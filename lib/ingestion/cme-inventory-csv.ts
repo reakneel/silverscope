@@ -86,7 +86,7 @@ export function parseCmeSilverStocksCsv(csv: string, options: CmeSilverStockPars
   const date = dates[0];
   const fetchedAt = options.fetchedAt ?? new Date().toISOString();
   const common = {
-    sourceId: "cme-comex", unit: "troy_oz", observedAt: `${date}T00:00:00.000Z`,
+    sourceId: "cme-comex", unit: "oz", observedAt: `${date}T00:00:00.000Z`,
     publishedAt: null, fetchedAt, confidence: 0.98, status: "verified" as const,
     sourceUrl: SOURCE_URL,
   };
