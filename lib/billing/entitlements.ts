@@ -12,11 +12,11 @@ export interface Entitlements {
   canAccessApi: boolean;
   canCreateAlerts: boolean;
 }
-export function resolveEntitlements(input: SubscriptionEntitlementInput = {}): Entitlements {
+export function resolveEntitlements(input: SubscriptionEntitlementInput = {}, nowMs = Date.now()): Entitlements {
   const requestedPlan: PlanKey = input.planKey === "pro" || input.planKey === "ultra" ? input.planKey : "free";
   const activeStatus = input.status === "active" || input.status === "trialing";
   const periodValid = input.currentPeriodEnd === null || input.currentPeriodEnd === undefined ||
-    (Number.isFinite(Date.parse(input.currentPeriodEnd)) && Date.parse(input.currentPeriodEnd) > Date.now());
+    (Number.isFinite(Date.parse(input.currentPeriodEnd)) && Date.parse(input.currentPeriodEnd) > nowMs);
   const plan: PlanKey = activeStatus && periodValid ? requestedPlan : "free";
   return {
     plan,
