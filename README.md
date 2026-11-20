@@ -55,6 +55,8 @@ Open http://localhost:3000.
 - lib/research/walk-forward.ts — chronological expanding / rolling folds with embargo
 - lib/research/futures-execution.ts — next-bar futures execution, fees, slippage, explicit rolls and simplified margin liquidation
 - lib/research/position-sizing.ts — risk-budget and initial-margin constrained contract sizing
+- lib/research/volume-execution.ts — bar-volume participation constrained fills with explicit residual quantity
+- lib/research/portfolio-risk.ts — conservative multi-contract exposure, additive margin and limit aggregation
 - lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
