@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       const priceId = subscription?.items?.data?.[0]?.price?.id;
       const plan = subscription?.metadata?.plan_key === "pro" || subscription?.metadata?.plan_key === "ultra"
         ? subscription.metadata.plan_key : planFromPrice(priceId);
-      if (typeof userId === "string" && plan) {
+      if (typeof userId === "string" && typeof subscription?.id === "string" && plan) {
         const status = event.type === "customer.subscription.deleted" ? "canceled" : String(subscription.status ?? "inactive");
         const periodEnd = typeof subscription.current_period_end === "number"
           ? new Date(subscription.current_period_end * 1000).toISOString() : null;
