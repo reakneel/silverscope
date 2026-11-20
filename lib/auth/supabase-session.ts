@@ -52,3 +52,8 @@ export function clearSupabaseSessionCookies(store: Awaited<ReturnType<typeof coo
   store.set(REFRESH_COOKIE, "", { ...cookieOptions(0), maxAge: 0 });
 }
 export function getSupabaseAuthConfig() { return authConfig(); }
+
+export async function getSupabaseUserAccessToken(): Promise<string | null> {
+  const store = await cookies();
+  return store.get(ACCESS_COOKIE)?.value ?? null;
+}

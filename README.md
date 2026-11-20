@@ -63,6 +63,8 @@ Open http://localhost:3000.
 - lib/research/portfolio-execution.ts — shared-equity multi-contract execution, volume-limited persistent target orders, margin admission and liquidation
 - lib/monitoring/source-health.ts — explicit-cadence freshness, ingestion failure classification and alert summaries
 - lib/auth/supabase-session.ts — secure HttpOnly Supabase auth sessions and token refresh
+- app/api/alerts — Pro/Ultra plan-gated, owner-scoped alert CRUD
+- app/api/research/runs — Ultra-gated immutable point-in-time research run persistence
 - lib/billing/entitlements.ts — fail-closed plan entitlements
 - lib/billing/stripe-webhook.ts — timestamp-bound Stripe signature verification
 - lib/research/point-in-time.ts — strict publication-time feature availability gate

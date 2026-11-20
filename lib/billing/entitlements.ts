@@ -11,6 +11,7 @@ export interface Entitlements {
   canAccessScenarioResearch: boolean;
   canAccessApi: boolean;
   canCreateAlerts: boolean;
+  maxAlerts: number;
 }
 export function resolveEntitlements(input: SubscriptionEntitlementInput = {}, nowMs = Date.now()): Entitlements {
   const requestedPlan: PlanKey = input.planKey === "pro" || input.planKey === "ultra" ? input.planKey : "free";
@@ -25,5 +26,6 @@ export function resolveEntitlements(input: SubscriptionEntitlementInput = {}, no
     canAccessScenarioResearch: plan === "ultra",
     canAccessApi: plan === "ultra",
     canCreateAlerts: plan === "pro" || plan === "ultra",
+    maxAlerts: plan === "pro" ? 10 : plan === "ultra" ? 50 : 0,
   };
 }
