@@ -6,7 +6,7 @@ export function verifyStripeSignature(
   nowSeconds = Math.floor(Date.now() / 1000),
   toleranceSeconds = 300,
 ): boolean {
-  if (!signatureHeader || !secret || !Number.isFinite(nowSeconds) || toleranceSeconds <= 0) return false;
+  if (!signatureHeader || !secret || !Number.isFinite(nowSeconds) || !Number.isFinite(toleranceSeconds) || toleranceSeconds <= 0) return false;
   const parts = signatureHeader.split(",").map((part) => part.trim());
   const timestampPart = parts.find((part) => part.startsWith("t="));
   const signatures = parts.filter((part) => part.startsWith("v1=")).map((part) => part.slice(3));
