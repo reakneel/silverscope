@@ -7,6 +7,10 @@ execFileSync(process.execPath, [
   require.resolve("typescript/bin/tsc"), "--target", "ES2020", "--module", "commonjs",
   "--strict", "--skipLibCheck", "--outDir", output,
   "lib/quant/engine.ts", "lib/data/quality.ts",
+  "lib/ingestion/fred-adapter.ts", "lib/ingestion/supabase-rest.ts",
 ], { stdio: "inherit" });
-execFileSync(process.execPath, ["--test", "tests/quant.test.cjs", "tests/quality.test.cjs"], { stdio: "inherit" });
+execFileSync(process.execPath, ["--test",
+  "tests/quant.test.cjs", "tests/quality.test.cjs",
+  "tests/fred-adapter.test.cjs", "tests/supabase-rest.test.cjs",
+], { stdio: "inherit" });
 fs.rmSync(output, { recursive: true, force: true });

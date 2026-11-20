@@ -9,20 +9,25 @@
 - [x] Add source registry and ingestion adapter contract
 - [x] Add Supabase initial schema and RLS migration
 - [x] Add application health endpoint
-- [ ] Apply migration to a provisioned Supabase project
-- [ ] Verify production build and deployment after milestone commit
+- [x] Add FRED macro adapter and protected ingestion endpoint
+- [x] Add idempotent Supabase REST persistence path
+- [ ] Apply migrations to a provisioned Supabase project
+- [ ] Verify production credentials and run a controlled ingestion
 
 ## P1 — Data and quant foundation
 - [x] Design schema and migrations for sources, observations, indicators, scores and signals
 - [x] Build source registry and ingestion run contract
 - [x] Implement validation, freshness and provenance checks
 - [x] Implement normalization helper and coverage-aware composite score
-- [x] Add unit tests for score and validation behavior
+- [x] Add unit tests for score, validation and FRED adapter behavior
+- [x] Add FRED macro source adapter for DFII10, DTWEXBGS and DGS10
+- [x] Add protected ingestion route and deduplicated observation persistence
 - [ ] Provision Supabase project and environments
-- [ ] Implement one verified silver price source
+- [ ] Configure FRED API key and cron secret
+- [ ] Implement one verified silver spot source
 - [ ] Implement COMEX inventory ingestion
-- [ ] Add macro source adapters
-- [ ] Persist ingestion runs, observations and score snapshots
+- [ ] Add CFTC positioning source adapter
+- [ ] Persist score snapshots and signal evidence
 - [ ] Add integration tests against a staging database
 
 ## P2 — Accounts and paid product
