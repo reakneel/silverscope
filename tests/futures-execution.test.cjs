@@ -55,3 +55,26 @@ test("closes the expiring contract and opens the next contract without booking t
   assert.equal(rollFills[1].referencePrice, 33);
   assert.ok(result.finalEquity > 100000);
 });
+
+test("enforces initial margin and liquidates below maintenance margin", () => {
+  const bars = [
+    { timestamp: "2026-01-01", contractId: "SIH26", open: 30, close: 30, targetContracts: 1 },
+    { timestamp: "2026-01-02", contractId: "SIH26", open: 30, close: 15, targetContracts: 1 },
+  ];
+  assert.throws(() => simulateFuturesExecution(bars, { ...options, initialMarginRate: 0.8, maintenanceMarginRate: 0.5 }), /initial margin/i);
+  const result = simulateFuturesExecution(bars, { ...options, initialMarginRate: 0.5, maintenanceMarginRate: 0.4 });
+  const liquidation = result.fills.find((fill) => fill.reason === "margin_liquidation");
+  assert.ok(liquidation);
+  assert.equal(liquidation.side, "sell");
+  assert.equal(result.equityCurve.at(-1).contracts, 0);
+  assert.equal(result.equityCurve.at(-1).maintenanceMargin, 0);
+});
+
+test("requires coherent margin rates", () => {
+  const bars = [
+    { timestamp: "2026-01-01", contractId: "SIH26", open: 30, close: 30, targetContracts: 0 },
+    { timestamp: "2026-01-02", contractId: "SIH26", open: 30, close: 30, targetContracts: 0 },
+  ];
+  assert.throws(() => simulateFuturesExecution(bars, { ...options, initialMarginRate: 0.2 }), /supplied together/i);
+  assert.throws(() => simulateFuturesExecution(bars, { ...options, initialMarginRate: 0.2, maintenanceMarginRate: 0.3 }), /satisfy/i);
+});
