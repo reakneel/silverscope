@@ -11,7 +11,7 @@ test("time-weighted return removes external deposits from performance", () => {
     { date: "2026-01-01", value: 100 },
     { date: "2026-01-02", value: 210 },
   ], [{ date: "2026-01-02", amount: 100, type: "external_inflow" }]);
-  assert.equal(result, 10);
+  assert.ok(result !== null && Math.abs(result - 10) < 1e-10);
 });
 
 test("Modified Dietz supports weighted external cash flows", () => {
@@ -45,7 +45,7 @@ test("performance series computes cash-flow adjusted periodic and cumulative ret
     { date: "2026-01-02", value: 210 },
     { date: "2026-01-03", value: 220.5 },
   ], [{ date: "2026-01-02", amount: 100, type: "external_inflow" }]);
-  assert.equal(result[1].periodReturnPct, 10);
+  assert.ok(Math.abs(result[1].periodReturnPct - 10) < 1e-10);
   assert.ok(Math.abs(result[2].cumulativeReturnPct - 15.5) < 1e-10);
 });
 
