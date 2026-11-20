@@ -133,6 +133,7 @@ export function simulatePortfolioExecution(
     }
 
     const capacityUsed = new Map<string, number>();
+    const marginLiquidatedIds = new Set<string>();
     let tradedNotional = 0;
     for (const bar of [...frame.bars].sort((a, b) => a.contractId.localeCompare(b.contractId))) {
       const target = targets.get(bar.contractId) ?? 0;
@@ -182,7 +183,7 @@ export function simulatePortfolioExecution(
       return { gross, net, initial, maintenance };
     };
     let margin = marginAtClose();
-    if (equity > 0 && equity < margin.maintenance) {
+    if (equity < margin.maintenance) {
       const riskOrder = [...positions.entries()].filter(([, q]) => q !== 0).sort((a, b) => {
         const ba = byId.get(a[0])!, bb = byId.get(b[0])!;
         return Math.abs(b[1] * bb.close * bb.contractMultiplier * bb.maintenanceMarginRate) - Math.abs(a[1] * ba.close * ba.contractMultiplier * ba.maintenanceMarginRate);
@@ -197,6 +198,7 @@ export function simulatePortfolioExecution(
         tradedNotional += execute(frame.timestamp, bar, quantity, current > 0 ? "sell" : "buy", bar.close, "margin_liquidation", next);
         positions.set(contractId, next);
         targets.set(contractId, 0);
+        marginLiquidatedIds.add(contractId);
         capacityUsed.set(contractId, used + quantity);
         margin = marginAtClose();
         if (equity >= margin.maintenance) break;
@@ -214,6 +216,7 @@ export function simulatePortfolioExecution(
       lastClose.set(bar.contractId, bar.close);
       targets.set(bar.contractId, bar.targetContracts);
     }
+    for (const contractId of marginLiquidatedIds) targets.set(contractId, 0);
     // A margin call overrides the close target; do not automatically re-open a liquidated position.
     if (equity < margin.maintenance) {
       for (const [contractId, quantity] of positions) if (quantity !== 0) targets.set(contractId, 0);
@@ -247,6 +250,8 @@ export function simulatePortfolioExecution(
     finalPoint.initialMargin = finalOpenPositions.reduce((sum, p) => sum + Math.abs(p.contracts * p.markPrice * specs.get(p.contractId)!.multiplier) * specs.get(p.contractId)!.initial, 0);
     finalPoint.maintenanceMargin = finalOpenPositions.reduce((sum, p) => sum + Math.abs(p.contracts * p.markPrice * specs.get(p.contractId)!.multiplier) * specs.get(p.contractId)!.maintenance, 0);
     finalPoint.maintenanceShortfall = Math.max(0, finalPoint.maintenanceMargin - equity);
+    const finalLiquidationNotional = fills.filter((fill) => fill.timestamp === finalFrame.timestamp && fill.reason === "final_liquidation").reduce((sum, fill) => sum + fill.contracts * fill.referencePrice * specs.get(fill.contractId)!.multiplier, 0);
+    finalPoint.turnover += finalLiquidationNotional / Math.max(Math.abs(equity), 1e-12);
   }
   return {
     initialCapital: options.initialCapital, finalEquity: equity, totalReturn: equity / options.initialCapital - 1,
