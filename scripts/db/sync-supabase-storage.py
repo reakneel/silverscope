@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -25,8 +26,14 @@ def safe_object_path(bucket: str, object_name: str) -> Path:
         raise ValueError("Unsafe bucket or object path returned by Storage API.")
     if object_name.startswith("/") or "\x00" in object_name:
         raise ValueError("Unsafe absolute or NUL object path.")
-    return Path(*parts)
-
+    reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+    encoded = []
+    for part in parts:
+        local = urllib.parse.quote(part, safe="-_.()")
+        if part.split(".")[0].upper() in reserved or part.endswith((".", " ")):
+            local = f"%{ord(part[0]):02X}" + urllib.parse.quote(part[1:], safe="-_.()")
+        encoded.append(local)
+    return Path(*encoded)
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -104,10 +111,12 @@ class StorageClient:
 
 
 def atomic_json(path: Path, value: Any) -> None:
-    temp = path.with_suffix(path.suffix + ".partial")
-    temp.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, prefix=".manifest-", suffix=".partial", delete=False) as stream:
+        temp = Path(stream.name)
+        stream.write(json.dumps(value, indent=2, sort_keys=True) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
     os.replace(temp, path)
-
 
 def sync(args: argparse.Namespace) -> int:
     base_url = os.environ.get("SUPABASE_URL", "").strip()
@@ -175,9 +184,9 @@ def sync(args: argparse.Namespace) -> int:
                         print(f"WOULD DOWNLOAD {key}")
                         continue
                     destination.parent.mkdir(parents=True, exist_ok=True)
-                    temporary = destination.with_name(destination.name + ".partial")
                     payload = client.download(bucket_name, object_name)
-                    with temporary.open("wb") as stream:
+                    with tempfile.NamedTemporaryFile("wb", dir=destination.parent, prefix=".object-", suffix=".partial", delete=False) as stream:
+                        temporary = Path(stream.name)
                         stream.write(payload)
                         stream.flush()
                         os.fsync(stream.fileno())
