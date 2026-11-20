@@ -1,14 +1,79 @@
 "use client";
-import {useState} from "react";
-type Preview={fileName:string;totalRows:number;acceptedCount:number;rejectedCount:number;sha256:string;warnings:string[];unmappedHeaders:string[];mapping:Record<string,string>;acceptedRows:Array<{rowNumber:number;normalized:Record<string,string|number|null>}>;rejectedRows:Array<{rowNumber:number;reason:string}>;commitAvailable:boolean};
-export function HuataiImportPanel(){
- const[kind,setKind]=useState<"holdings_snapshot"|"executions"|"cash_ledger">("holdings_snapshot");const[file,setFile]=useState<File|null>(null);const[mappingText,setMappingText]=useState("");const[preview,setPreview]=useState<Preview|null>(null);const[error,setError]=useState("");const[busy,setBusy]=useState(false);
- async function runPreview(event:React.FormEvent<HTMLFormElement>){event.preventDefault();if(!file){setError("请选择 CSV/TXT 文件。");return;}setBusy(true);setError("");setPreview(null);try{const form=new FormData();form.set("file",file);form.set("kind",kind);if(mappingText.trim()){try{JSON.parse(mappingText);}catch{setError("字段映射必须是有效 JSON，例如 {\\"symbol\\":\\"Instrument\\",\\"quantity\\":\\"Units\\"}");setBusy(false);return;}form.set("mapping",mappingText);}const response=await fetch("/api/portfolio/import/universal-preview",{method:"POST",body:form,cache:"no-store"});const result=await response.json();if(!response.ok)throw new Error(result.message??result.error??"文件预览失败");setPreview(result.preview);}catch(e){setError(e instanceof Error?e.message:"文件预览失败");}finally{setBusy(false);}}
- return <section className="panel portfolio-import"><div className="panel-heading"><div><h2>通用组合数据导入</h2><p>支持华泰、同花顺、雪球及常见 CSV/TXT 导出；自动识别中英文表头</p></div><span className="status-pending">PREVIEW ONLY</span></div>
- <form onSubmit={runPreview} className="portfolio-import-form"><label className="auth-field">数据类型<select className="auth-input" value={kind} onChange={e=>setKind(e.target.value as typeof kind)}><option value="holdings_snapshot">持仓快照</option><option value="executions">成交流水</option><option value="cash_ledger">现金流水 / 余额</option></select></label>
- <label className="auth-field">组合数据文件（CSV / TXT，最大 10 MB）<input className="auth-input" type="file" accept=".csv,.txt,text/csv,text/plain" onChange={e=>{setFile(e.target.files?.[0]??null);setPreview(null);setError("");}}/></label><label className="auth-field">可选：自定义列映射（JSON）<textarea className="auth-input" rows={2} value={mappingText} onChange={e=>setMappingText(e.target.value)} placeholder={"{\\"symbol\\":\\"Instrument\\",\\"quantity\\":\\"Units\\"}"}/></label><button className="button-primary" type="submit" disabled={busy||!file}>{busy?"正在识别字段…":"解析并预览"}</button></form>
- {error&&<p className="auth-error" role="alert">{error}</p>}{preview&&<><div className="portfolio-preview-stats"><div><span>总行数</span><strong>{preview.totalRows}</strong></div><div><span>识别成功</span><strong>{preview.acceptedCount}</strong></div><div><span>拒绝</span><strong>{preview.rejectedCount}</strong></div></div><p className="muted portfolio-hash">{preview.fileName} · SHA-256: {preview.sha256}</p>
- <div className="notice"><strong>当前为通用预览阶段</strong><p>系统已统一字段，但尚未把这些数据写入生产账本。列名不匹配时需先映射；币种、时区、数量单位及复权口径需确认。</p></div>
- {preview.unmappedHeaders.length>0&&<p className="muted">未使用的原始列：{preview.unmappedHeaders.join("、")}</p>}
- <div className="table-wrap"><table><thead><tr><th>行</th><th>标准化数据</th></tr></thead><tbody>{preview.acceptedRows.slice(0,20).map(r=><tr key={r.rowNumber}><td>{r.rowNumber}</td><td><code>{JSON.stringify(r.normalized)}</code></td></tr>)}{preview.rejectedRows.slice(0,20).map(r=><tr key={r.rowNumber}><td>{r.rowNumber}</td><td className="auth-error">{r.reason}</td></tr>)}</tbody></table></div>{preview.warnings.map(w=><p className="muted" key={w}>• {w}</p>)}</>}</section>;
+
+import { useState } from "react";
+
+type Preview = {
+  fileName: string;
+  totalRows: number;
+  acceptedCount: number;
+  rejectedCount: number;
+  sha256: string;
+  warnings: string[];
+  unmappedHeaders: string[];
+  mapping: Record<string, string>;
+  acceptedRows: Array<{ rowNumber: number; normalized: Record<string, string | number | null> }>;
+  rejectedRows: Array<{ rowNumber: number; reason: string }>;
+  commitAvailable: boolean;
+};
+
+export function HuataiImportPanel() {
+  const [kind, setKind] = useState<"holdings_snapshot" | "executions" | "cash_ledger">("holdings_snapshot");
+  const [file, setFile] = useState<File | null>(null);
+  const [mappingText, setMappingText] = useState("");
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function runPreview(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!file) { setError("请选择 CSV/TXT 文件。"); return; }
+    let mapping: Record<string, string> | null = null;
+    if (mappingText.trim()) {
+      try { mapping = JSON.parse(mappingText) as Record<string, string>; }
+      catch { setError('字段映射必须是有效 JSON，例如 {"symbol":"Instrument","quantity":"Units"}'); return; }
+    }
+    setBusy(true); setError(""); setPreview(null);
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("kind", kind);
+      if (mapping) form.set("mapping", JSON.stringify(mapping));
+      const response = await fetch("/api/portfolio/import/universal-preview", { method: "POST", body: form, cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message ?? result.error ?? "文件预览失败");
+      setPreview(result.preview);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "文件预览失败");
+    } finally { setBusy(false); }
+  }
+
+  return <section className="panel portfolio-import">
+    <div className="panel-heading"><div><h2>通用组合数据导入</h2><p>支持华泰、同花顺、雪球及常见 CSV/TXT 导出；自动识别中英文表头</p></div><span className="status-pending">PREVIEW ONLY</span></div>
+    <form onSubmit={runPreview} className="portfolio-import-form">
+      <label className="auth-field">数据类型
+        <select className="auth-input" value={kind} onChange={event => setKind(event.target.value as typeof kind)}>
+          <option value="holdings_snapshot">持仓快照</option><option value="executions">成交流水</option><option value="cash_ledger">现金流水 / 余额</option>
+        </select>
+      </label>
+      <label className="auth-field">组合数据文件（CSV / TXT，最大 10 MB）
+        <input className="auth-input" type="file" accept=".csv,.txt,text/csv,text/plain" onChange={event => { setFile(event.target.files?.[0] ?? null); setPreview(null); setError(""); }} />
+      </label>
+      <label className="auth-field">可选：自定义列映射（JSON）
+        <textarea className="auth-input" rows={2} value={mappingText} onChange={event => setMappingText(event.target.value)} placeholder='{"symbol":"Instrument","quantity":"Units"}' />
+      </label>
+      <button className="button-primary" type="submit" disabled={busy || !file}>{busy ? "正在识别字段…" : "解析并预览"}</button>
+    </form>
+    {error && <p className="auth-error" role="alert">{error}</p>}
+    {preview && <>
+      <div className="portfolio-preview-stats"><div><span>总行数</span><strong>{preview.totalRows}</strong></div><div><span>识别成功</span><strong>{preview.acceptedCount}</strong></div><div><span>拒绝</span><strong>{preview.rejectedCount}</strong></div></div>
+      <p className="muted portfolio-hash">{preview.fileName} · SHA-256: {preview.sha256}</p>
+      <div className="notice"><strong>当前为通用预览阶段</strong><p>系统已统一字段，但尚未把这些数据写入生产账本。列名不匹配时需先映射；币种、时区、数量单位及复权口径需确认。</p></div>
+      {preview.unmappedHeaders.length > 0 && <p className="muted">未使用的原始列：{preview.unmappedHeaders.join("、")}</p>}
+      <div className="table-wrap"><table><thead><tr><th>行</th><th>标准化数据</th></tr></thead><tbody>
+        {preview.acceptedRows.slice(0, 20).map(row => <tr key={row.rowNumber}><td>{row.rowNumber}</td><td><code>{JSON.stringify(row.normalized)}</code></td></tr>)}
+        {preview.rejectedRows.slice(0, 20).map(row => <tr key={row.rowNumber}><td>{row.rowNumber}</td><td className="auth-error">{row.reason}</td></tr>)}
+      </tbody></table></div>
+      {preview.warnings.map(warning => <p className="muted" key={warning}>• {warning}</p>)}
+    </>}
+  </section>;
 }
