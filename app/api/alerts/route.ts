@@ -12,7 +12,7 @@ export async function GET() {
     if (!entitlements.canCreateAlerts) return NextResponse.json({ error: "plan_upgrade_required" }, { status: 403 });
     const token = await getSupabaseUserAccessToken();
     if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    const response = await supabaseUserRequest("alerts?select=id,alert_type,configuration,enabled,last_triggered_at,created_at&order=created_at.desc&limit=50", token);
+    const response = await supabaseUserRequest(`alerts?select=id,alert_type,configuration,enabled,last_triggered_at,created_at&order=created_at.desc&limit=${entitlements.maxAlerts}`, token);
     if (!response.ok) return NextResponse.json({ error: "alerts_lookup_failed" }, { status: 503 });
     return NextResponse.json({ alerts: await response.json(), entitlements }, { headers: { "Cache-Control": "no-store" } });
   } catch {
