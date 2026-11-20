@@ -10,6 +10,8 @@
 - `calculatePortfolioRisk`: multi-contract gross/net notional, additive initial/maintenance margin, risk-group concentration and configurable account-limit checks.
 - `createResearchSnapshot`: canonical SHA-256 input snapshots with strict point-in-time availability and provenance validation.
 - `createExperimentManifest`: versioned, content-addressed experiment definitions.
+- `buildWalkForwardReport`: stitches non-overlapping out-of-sample fold returns and emits aggregate risk metrics without inventing calendar-gap returns.
+- `adjustPValuesBonferroni`: family-wise error correction across a declared set of tested hypotheses.
 - `buildPointInTimeFeatureSignals`: strict historical feature construction requiring verified observations with known publication timestamps no later than the decision time.
 
 These are deterministic research primitives. They do not establish that a strategy is profitable or reproduce a complete exchange matching engine.
@@ -23,6 +25,10 @@ A contract change requires an explicit `rollFromPrice` representing the old cont
 Initial and maintenance margin rates are optional but must be supplied together. Initial margin is checked before increasing/opening a position. Equity is checked against maintenance margin after each bar mark; if breached, the simulator liquidates at that bar's close with configured slippage and commission. These are simplified percentage-of-notional assumptions, not exchange-specific SPAN or broker house-margin rules.
 
 The position-sizing helper estimates risk as stop distance multiplied by contract multiplier. It floors to whole contracts and applies both risk-budget and initial-margin constraints. It does not guarantee the stop can execute at its stated price; gaps and liquidity can cause larger losses.
+
+## Out-of-sample reporting and multiple testing
+
+The walk-forward report consumes only explicit test-fold equity series, rejects duplicate fold IDs and overlapping/out-of-order test windows, and chains net per-period returns across the tested windows. It does not invent returns during calendar gaps; therefore aggregate CAGR and Calmar are intentionally null. Volatility and Sharpe are annualized using the caller-supplied `periodsPerYear`, which must match the sampling cadence. Benchmark return is emitted only when every out-of-sample period has benchmark marks. Bonferroni correction controls family-wise error for a declared family of p-values; it does not create p-values or replace a nested validation design. Strategy selection still requires a predeclared hypothesis family and untouched final holdout.
 
 ## Immutable research snapshots and experiment manifests
 
