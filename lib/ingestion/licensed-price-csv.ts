@@ -46,7 +46,7 @@ export function parseLicensedSilverPriceCsv(csv: string, options: LicensedPriceC
   let sourceUrl: URL;
   try { sourceUrl = new URL(options.sourceUrl); } catch { throw new Error("A valid licensed provider source URL is required."); }
   if (sourceUrl.protocol !== "https:") throw new Error("Licensed provider source URL must use HTTPS.");
-  if (!csv.trim() || csv.length > 2_000_000) throw new Error("CSV is empty or exceeds the 2 MB import limit.");
+  if (!csv.trim() || new TextEncoder().encode(csv).length > 2_000_000) throw new Error("CSV is empty or exceeds the 2 MB import limit.");
   const rows = parseRows(csv);
   if (rows.length < 2) throw new Error("CSV must contain a header and at least one price row.");
   const headers = rows[0].map(normalize);
