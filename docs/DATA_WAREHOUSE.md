@@ -27,7 +27,7 @@ The Vercel cron schedule is declared in `vercel.json`. It keeps Git-based automa
 | Daily dispatcher | 22:00 every day | On weekdays pulls FRED; every day records source health and data-quality snapshots |
 | Weekly dispatcher | Friday 22:15 | Pulls CFTC COMEX standard Silver (084691) and archives eligible older observations |
 
-Vercel Cron sends the configured `CRON_SECRET` as a Bearer token. The two dispatcher jobs consolidate the workload to fit the two-cron limit on Vercel Hobby plans. Set the secret in the Production environment and redeploy for schedules to become active. The routes fail closed with 503 when secrets or the database are missing. Manual protected requests can use the same Bearer header.
+Vercel Cron sends the configured `CRON_SECRET` as a Bearer token. The two dispatcher jobs consolidate related work and keep the production schedule simple. Set the secret in the Production environment and redeploy for schedules to become active. The routes fail closed with 503 when secrets or the database are missing. Manual protected requests can use the same Bearer header.
 
 Only FRED and CFTC are automated by this schedule. CME inventory and licensed spot prices remain controlled imports until stable, permitted source delivery and redistribution rights are established. No scraping or licensing bypass is introduced.
 
