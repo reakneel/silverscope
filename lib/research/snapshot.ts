@@ -46,7 +46,7 @@ function normalizeJson(value: unknown, path = "value"): JsonValue {
   }
   if (Array.isArray(value)) return value.map((item, index) => normalizeJson(item, `${path}[${index}]`));
   if (typeof value === "object" && value !== null) {
-    const result: Record<string, JsonValue> = {};
+    const result = Object.create(null) as Record<string, JsonValue>;
     for (const key of Object.keys(value).sort()) {
       const item = (value as Record<string, unknown>)[key];
       if (item === undefined) throw new Error(`${path}.${key} must not be undefined.`);
@@ -77,15 +77,19 @@ export function createResearchSnapshot(input: ResearchSnapshotInput): ResearchSn
     datasetId: input.datasetId, modelVersion: input.modelVersion, strategyVersion: input.strategyVersion,
   })) if (!value.trim()) throw new Error(`${name} is required.`);
   const decision = validTime(input.decisionTime, "decisionTime");
+  const seen = new Set<string>();
   const observations = input.observations.map((observation) => {
     const observed = validTime(observation.observedAt, "observedAt");
     const published = observation.publishedAt === null ? Number.NaN : validTime(observation.publishedAt, "publishedAt");
     const fetched = validTime(observation.fetchedAt, "fetchedAt");
     if (observation.status !== "verified") throw new Error("Research snapshots only accept verified observations.");
     if (!Number.isFinite(published)) throw new Error("Research snapshots require a known publishedAt timestamp.");
-    if (observed > decision || published > decision || fetched > decision) throw new Error("Observation was not fully available at decisionTime.");
+    if (observed > decision || published > decision || fetched > decision || fetched < published) throw new Error("Observation was not fully available at decisionTime.");
     if (!Number.isFinite(observation.value) || !Number.isFinite(observation.confidence) || observation.confidence < 0 || observation.confidence > 1) throw new Error("Observation value or confidence is invalid.");
     if (!observation.sourceId || !observation.indicatorKey || !observation.unit) throw new Error("Observation provenance fields are required.");
+    const identity = [observation.sourceId, observation.indicatorKey, observation.observedAt, observation.sourceRecordId ?? ""].join("|");
+    if (seen.has(identity)) throw new Error("Duplicate observation identity in research snapshot.");
+    seen.add(identity);
     return { ...observation };
   }).sort((a, b) =>
     a.sourceId.localeCompare(b.sourceId) ||
