@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       count(`observation_history?select=id&observed_at=gte.${from}&status=neq.verified`),
       rest(`ingestion_runs?select=fetched_count,accepted_count,rejected_count&started_at=gte.${from}&limit=1000`) as Promise<Array<Record<string, unknown>>>,
     ]);
-    const totals = (runs ?? []).reduce((sum, run) => ({
+    const totals = (runs ?? []).reduce<{ fetched: number; accepted: number; rejected: number }>((sum, run) => ({
       fetched: sum.fetched + Number(run.fetched_count ?? 0),
       accepted: sum.accepted + Number(run.accepted_count ?? 0),
       rejected: sum.rejected + Number(run.rejected_count ?? 0),
