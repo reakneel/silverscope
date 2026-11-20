@@ -15,6 +15,10 @@ class StorageBackupTests(unittest.TestCase):
         path = MODULE.safe_object_path("research", "daily/2026/11/data.json")
         self.assertEqual(path, Path("research/daily/2026/11/data.json"))
 
+    def test_encodes_windows_reserved_names_and_characters(self):
+        self.assertEqual(MODULE.safe_object_path("bucket", "folder/a:b.txt"), Path("bucket/folder/a%3Ab.txt"))
+        self.assertEqual(MODULE.safe_object_path("bucket", "CON"), Path("bucket/%43ON"))
+
     def test_rejects_parent_traversal_and_absolute_paths(self):
         for name in ("../secret", "nested/../../secret", "/absolute", "folder/./file"):
             with self.subTest(name=name):
