@@ -34,10 +34,13 @@
 - [ ] Configure FRED API key and cron secret
 - [ ] Run controlled CFTC Silver API ingestion and historical backfill
 - [ ] Review calibration window and activate validated parameters
-- [ ] Implement one verified silver spot source
-- [ ] Implement COMEX warehouse inventory ingestion
-- [ ] Add LBMA holdings and vault data adapter
+- [ ] Implement one verified silver spot source with commercial-use rights
+- [x] Implement strict COMEX registered / eligible / total inventory CSV parser and protected import route
+- [ ] Automate official CME XLS ingestion after verifying a stable supported format and permitted access terms
+- [ ] Add LBMA holdings and vault data adapter after obtaining licensed data access
 - [ ] Add integration tests against a staging database
+- [ ] Build point-in-time walk-forward research and cost-aware backtest metrics
+- [ ] Add source freshness / ingestion failure monitoring and alerting
 
 ## P2 — Accounts and paid product
 - [ ] Supabase Auth and protected dashboard
