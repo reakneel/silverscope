@@ -74,7 +74,9 @@
 - [ ] Full strategy simulation and walk-forward performance reports
 - [ ] Transaction costs and slippage
 - [ ] Benchmark and risk metrics
-- [ ] Scenario analysis and sensitivity
+- [x] Add multi-contract price-shock stress analysis with margin shortfall reporting
+- [x] Add transaction-cost sensitivity analysis over explicit turnover and cost assumptions
+- [ ] Add empirically calibrated liquidity / market-impact sensitivity ranges
 - [ ] Model monitoring and drift alerts
 - [ ] Research report generation
 - [ ] Public API with keys, quotas and audit logs
