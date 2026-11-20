@@ -30,18 +30,21 @@ export async function getMarketOverview(options: MarketOverviewOptions = {}): Pr
     return response.json() as Promise<unknown>;
   };
   try {
-    const observationsQuery = new URLSearchParams({
-      select: "source_id,indicator_key,value,unit,observed_at,fetched_at,status",
-      indicator_key: "in.(cftc_managed_money_net,us_10y_real_yield,us_10y_nominal_yield,us_dollar_index)",
-      order: "observed_at.desc", limit: "100",
+    const indicatorKeys = ["cftc_managed_money_net", "us_10y_real_yield", "us_10y_nominal_yield", "us_dollar_index"];
+    const observationRequests = indicatorKeys.map((key) => {
+      const query = new URLSearchParams({
+        select: "source_id,indicator_key,value,unit,observed_at,fetched_at,status",
+        indicator_key: `eq.${key}`, order: "observed_at.desc", limit: "1",
+      });
+      return get(`observations?${query.toString()}`);
     });
-    const [scoreRows, observationRows, signalRows] = await Promise.all([
+    const [scoreRows, signalRows, ...observationResults] = await Promise.all([
       get("scores?select=score,regime,coverage,confidence,as_of,model_version_id,component_scores&order=as_of.desc&limit=1"),
-      get(`observations?${observationsQuery.toString()}`),
       get("signals?select=direction,confidence,generated_at,signal_key,model_version_id&order=generated_at.desc&limit=1"),
+      ...observationRequests,
     ]);
     const scores = Array.isArray(scoreRows) ? scoreRows as Array<Record<string, unknown>> : [];
-    const rows = Array.isArray(observationRows) ? observationRows as Array<Record<string, unknown>> : [];
+    const rows = observationResults.flatMap((result) => Array.isArray(result) ? result as Array<Record<string, unknown>> : []);
     const signals = Array.isArray(signalRows) ? signalRows as Array<Record<string, unknown>> : [];
     const observations: Record<string, LatestMarketObservation> = {};
     for (const row of rows) {
