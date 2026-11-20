@@ -83,7 +83,7 @@ function dateTime(date: string | undefined, time: string | undefined): string | 
   const d = date.trim().replace(/[年/.]/g, "-").replace(/月/g, "-").replace(/日/g, "");
   const t = (time ?? "00:00:00").trim();
   const normalized = d.includes("T") ? d : `${d}T${t}`;
-  const parsed = new Date(normalized);
+  const hasTimezone = /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(normalized);\n  const parsed = new Date(hasTimezone ? normalized : `${normalized}+08:00`);
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 function hash(value: string): string {
@@ -157,7 +157,7 @@ export function previewHuataiCsv(buffer: ArrayBuffer, kind: ImportKind): CsvPrev
     const values = Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""]));
     const result = canonicalValues(headers, cells, kind);
     if (result.requiredError) { rejectedRows.push({ rowNumber: i + 1, reason: result.requiredError }); continue; }
-    const fingerprint = hash(JSON.stringify({ kind, values }));
+    const fingerprint = hash(JSON.stringify({ kind, normalized: result.normalized }));
     acceptedRows.push({ rowNumber: i + 1, values, normalized: result.normalized, fingerprint });
   }
   return {
