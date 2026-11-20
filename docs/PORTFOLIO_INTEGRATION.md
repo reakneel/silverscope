@@ -103,11 +103,29 @@ Do not migrate lib/seed.ts data, seeded NAV/return series, demo account snapshot
 - Verify platform terms, data licences, and jurisdictional requirements before enabling any automated or commercial redistribution.
 - Keep the original source file private and provide a user-controlled deletion path subject to audit/retention requirements.
 
+## Intraday NAV and performance delivery
+
+The portfolio workspace exposes an owner-scoped time-series endpoint backed by `portfolio_valuation_snapshots`. The dashboard chart supports intraday, 7-day and 30-day windows and plots only persisted valuation points. It must show an honest empty state when there are no points; it must never interpolate or fabricate market movements.
+
+For a genuinely useful intraday curve, a valuation worker must periodically combine:
+- latest eligible quote per holding (source, observed_at, fetched_at, delay/licence metadata);
+- latest cash snapshot by currency and an approved FX rate where conversion is required;
+- position quantities and corporate-action-adjusted instrument identity;
+- fees, taxes and external cash movements, so performance is not confused with deposits/withdrawals.
+
+Sampling should be configurable (e.g. 1–5 minutes during market sessions, slower outside sessions) and respect the quote provider's rate limits and licence. Each persisted point records completeness and status. Missing quote/FX must create a partial point or a gap, not a stale value presented as live. The current UI/API reads these points; it does not itself supply a licensed live quote feed or a background valuation worker.
+
+## Provider-agnostic import strategy
+
+The universal CSV/TXT normalizer is the default import path. It maps common Chinese/English headers to canonical fields, supports explicit header overrides, fingerprints normalized rows and reports unmapped columns. Source-specific adapters remain optional refinements. Preview-only means preview-only: raw source evidence, transaction rows and snapshots are not committed until an audited, idempotent transactional import path and production Storage are enabled. XLSX parsing remains a separate follow-up; CSV/TXT support is not a claim of XLSX support.
+
 ## Acceptance gates
 
 - Empty database renders a truthful empty state; it does not seed holdings or fabricate NAV.
 - Missing DB/provider and query failures return explicit errors/status; they never return demo figures.
 - Same source file imported twice produces zero duplicate normalized events.
+- Intraday chart displays persisted valuation snapshots for the selected window and an explicit empty state when none exist.
+- Every plotted point has timestamp, currency, completeness and valuation status; no synthetic interpolation is presented as market data.
 - Overlapping statement windows do not duplicate executions.
 - Quantity and cash reconciliation tests cover buys, sells, partial fills, fees, dividends, transfers and corporate actions.
 - Xueqiu social portfolio data never contributes to brokerage account cash/assets or broker performance.
@@ -121,10 +139,7 @@ Do not migrate lib/seed.ts data, seeded NAV/return series, demo account snapshot
 
 - SilverScope Supabase migration history still needs remote reconciliation because the repository has duplicate 0006 prefixes. Do not run supabase db push until completed.
 - No verified production DB backup/restore drill or live ingestion activation has been demonstrated in this session.
-- Confirm the exact 同花顺 broker/client variant and export format; the export capabilities vary by connected broker.
-- Confirm whether 雪球 is used for public/private组合调仓 records, 模拟盈亏, or both.
-- Obtain one sanitized sample export from each source (remove name, account number, phone, address and other identifiers) before implementing concrete parsers. Do not upload raw account credentials.
-- Confirm market scope (A股 only, or also 港股/美股/funds) and account base currencies before final schema constraints.
+- 这些信息不再作为通用解析器开发的前置阻塞：先使用中英文别名和用户自定义列映射覆盖常见 CSV/TXT。正式账本提交前，仍需在导入预览中确认币种、市场、数量单位、时区和来源类别；必要时用脱敏样本校准具体适配器。雪球组合继续与券商账户隔离。
 
 ## Delivery sequence
 
