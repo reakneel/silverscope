@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Activity, Bell, ChartNoAxesCombined, CircleDollarSign, LayoutDashboard, RadioTower } from "lucide-react";
 import "./globals.css";
+import { SessionMenu } from "@/components/auth/session-menu";
 
 export const metadata: Metadata = {
   title: "SilverScope — Silver Market Intelligence",
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </aside>
           <main className="main-area">
-            <header className="topbar"><div className="mobile-brand">SilverScope</div><div className="topbar-right"><span className="market-pill"><Activity size={14}/> MARKET MONITOR</span><button className="icon-button" aria-label="Notifications"><Bell size={17}/></button><div className="avatar">SS</div></div></header>
+            <header className="topbar"><div className="mobile-brand">SilverScope</div><div className="topbar-right"><span className="market-pill"><Activity size={14}/> MARKET MONITOR</span><button className="icon-button" aria-label="Notifications"><Bell size={17}/></button><SessionMenu authConfigured={Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)} /></div></header>
             {children}
             <footer className="footer">SilverScope is a market research tool, not investment advice. Demo values are illustrative and are not live market data.</footer>
           </main>
