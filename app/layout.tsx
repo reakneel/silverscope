@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, Bell, ChartNoAxesCombined, CircleDollarSign, LayoutDashboard, RadioTower } from "lucide-react";
+import { Activity, Bell, ChartNoAxesCombined, CircleDollarSign, LayoutDashboard, RadioTower, WalletCards } from "lucide-react";
 import "./globals.css";
 import { SessionMenu } from "@/components/auth/session-menu";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const nav = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/signals", label: "Signals", icon: RadioTower },
-  { href: "/indicators", label: "Indicators", icon: ChartNoAxesCombined },
+  { href: "/indicators", label: "Indicators", icon: ChartNoAxesCombined },\n  { href: "/portfolio", label: "Portfolio", icon: WalletCards },
   { href: "/pricing", label: "Plans", icon: CircleDollarSign }
 ];
 
