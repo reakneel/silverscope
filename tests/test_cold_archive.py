@@ -5,6 +5,7 @@ import importlib.util
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "db" / "cold-archive-observations.py"
@@ -71,6 +72,26 @@ class ColdArchiveTests(unittest.TestCase):
     def test_psql_copy_path_rejects_quote_in_path(self):
         with self.assertRaisesRegex(RuntimeError, "cannot contain quotes"):
             MODULE.psql_copy_path(Path("/tmp/unsafe'path.csv"))
+
+    def test_delete_transaction_locks_table_and_checks_exact_hash_set(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.make_archive(directory, [self.record("id-1")])
+            with patch.object(MODULE, "run_psql") as run:
+                MODULE.delete_archived_rows("postgresql://local", path, "2020-01-01T00:00:00+00:00")
+                sql = run.call_args.args[1]
+                self.assertIn("LOCK TABLE public.observations IN SHARE ROW EXCLUSIVE MODE", sql)
+                self.assertIn("md5(to_jsonb(o)::text)", sql)
+                self.assertIn("eligible_count", sql)
+                self.assertIn("BEGIN", sql)
+
+    def test_restore_is_insert_only_and_hash_verified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self.make_archive(directory, [self.record("id-1")])
+            with patch.object(MODULE, "run_psql") as run:
+                MODULE.restore_archive("postgresql://postgres:postgres@127.0.0.1:54322/postgres", path)
+                sql = run.call_args.args[1]
+                self.assertIn("ON CONFLICT (dedupe_key) DO NOTHING", sql)
+                self.assertIn("md5(to_jsonb(o)::text)", sql)
 
     def test_psql_copy_path_normalizes_path(self):
         self.assertIn("/", MODULE.psql_copy_path(Path("relative/archive.csv")))
