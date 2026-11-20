@@ -6,14 +6,9 @@ export function getSupabaseAdminConfig() {
 }
 export async function supabaseAdminRequest(path: string, init: RequestInit = {}): Promise<Response> {
   const { baseUrl, serviceRoleKey } = getSupabaseAdminConfig();
-  return fetch(`${baseUrl}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-    },
-    cache: "no-store",
-  });
+  const headers = new Headers(init.headers);
+  headers.set("apikey", serviceRoleKey);
+  headers.set("Authorization", `Bearer ${serviceRoleKey}`);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  return fetch(`${baseUrl}/rest/v1/${path}`, { ...init, headers, cache: "no-store" });
 }
