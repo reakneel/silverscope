@@ -8,7 +8,7 @@ RETENTION_DAYS="${RETENTION_DAYS:-30}"
 command -v pg_dump >/dev/null || { echo "pg_dump is required (install PostgreSQL client tools)." >&2; exit 1; }
 command -v pg_restore >/dev/null || { echo "pg_restore is required (install PostgreSQL client tools)." >&2; exit 1; }
 command -v sha256sum >/dev/null || { echo "sha256sum is required." >&2; exit 1; }
-[[ "$RETENTION_DAYS" =~ ^[0-9]+$ ]] || { echo "RETENTION_DAYS must be a non-negative integer." >&2; exit 1; }
+[[ "$RETENTION_DAYS" =~ ^[0-9]+$ ]] && (( RETENTION_DAYS >= 1 )) || { echo "RETENTION_DAYS must be an integer greater than or equal to 1." >&2; exit 1; }
 
 mkdir -p "$BACKUP_ROOT"
 chmod 700 "$BACKUP_ROOT"
