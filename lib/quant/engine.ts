@@ -3,13 +3,18 @@ export const MODEL_VERSION = "silverscope-composite-0.1.0";
 export const COMPONENT_WEIGHTS: Readonly<Record<IndicatorGroup, number>> = {
   inventory_liquidity: 0.30, macro: 0.25, supply_demand: 0.30, positioning: 0.15,
 };
+export const EXPECTED_INPUTS_PER_GROUP: Readonly<Record<IndicatorGroup, number>> = {
+  inventory_liquidity: 5, macro: 5, supply_demand: 4, positioning: 3,
+};
 export interface ScorePolicy {
   minimumCoverage: number; minimumGroups: number; minimumConfidence: number; maxAgeHours: number;
   estimatedConfidenceMultiplier: number; manualConfidenceMultiplier: number;
+  expectedInputsPerGroup: Record<IndicatorGroup, number>;
 }
 export const DEFAULT_SCORE_POLICY: ScorePolicy = {
   minimumCoverage: 0.65, minimumGroups: 2, minimumConfidence: 0.35, maxAgeHours: 24 * 45,
   estimatedConfidenceMultiplier: 0.75, manualConfidenceMultiplier: 0.5,
+  expectedInputsPerGroup: { ...EXPECTED_INPUTS_PER_GROUP },
 };
 export interface ComponentResult {
   group: IndicatorGroup; weight: number; score: number | null; coverage: number;
@@ -20,7 +25,7 @@ export interface CompositeScore {
   regime: "bullish" | "neutral" | "bearish" | null; coverage: number; confidence: number | null;
   asOf: string; components: ComponentResult[]; acceptedInputKeys: string[];
   rejectedInputs: Array<{ key: string; reason: string }>;
-  methodology: { minimumCoverage: number; minimumGroups: number; thresholds: { bearishMaximum: number; bullishMinimum: number } };
+  methodology: { minimumCoverage: number; minimumGroups: number; thresholds: { bearishMaximum: number; bullishMinimum: number }; expectedInputsPerGroup: Record<IndicatorGroup, number> };
 }
 function timestamp(value: string): number | null {
   const parsed = Date.parse(value);
@@ -32,7 +37,10 @@ export function normalizeZScore(value: number, mean: number, standardDeviation: 
   return Math.max(0, Math.min(100, 50 + 15 * z));
 }
 export function calculateCompositeScore(inputs: FeatureSignal[], options: Partial<ScorePolicy> = {}, asOf: Date = new Date()): CompositeScore {
-  const policy = { ...DEFAULT_SCORE_POLICY, ...options };
+  const policy: ScorePolicy = {
+    ...DEFAULT_SCORE_POLICY, ...options,
+    expectedInputsPerGroup: { ...DEFAULT_SCORE_POLICY.expectedInputsPerGroup, ...options.expectedInputsPerGroup },
+  };
   const rejectedInputs: CompositeScore["rejectedInputs"] = [];
   const accepted: FeatureSignal[] = [];
   const seen = new Set<string>();
@@ -61,20 +69,26 @@ export function calculateCompositeScore(inputs: FeatureSignal[], options: Partia
     const total = adjusted.reduce((sum, value) => sum + value, 0);
     const score = total > 0 ? rows.reduce((sum, item, index) => sum + item.score * adjusted[index], 0) / total : null;
     const confidence = rows.length ? adjusted.reduce((sum, value) => sum + value, 0) / rows.length : null;
-    return { group, weight: COMPONENT_WEIGHTS[group], score, coverage: rows.length ? 1 : 0, confidence, inputCount: rows.length };
+    const expected = policy.expectedInputsPerGroup[group];
+    const coverage = Number.isFinite(expected) && expected > 0 ? Math.min(1, rows.length / expected) : 0;
+    return { group, weight: COMPONENT_WEIGHTS[group], score, coverage, confidence, inputCount: rows.length };
   });
-  const available = groups.filter((item) => item.score !== null);
-  const coverage = available.reduce((sum, item) => sum + item.weight, 0);
-  const weightedScore = coverage ? available.reduce((sum, item) => sum + (item.score as number) * item.weight, 0) / coverage : null;
-  const confidence = coverage ? available.reduce((sum, item) => sum + (item.confidence ?? 0) * item.weight, 0) / coverage * coverage : null;
-  const enough = coverage >= policy.minimumCoverage && available.length >= policy.minimumGroups && confidence !== null && confidence >= policy.minimumConfidence;
+  const available = groups.filter((item) => item.score !== null && item.coverage > 0);
+  const effectiveCoverage = available.reduce((sum, item) => sum + item.weight * item.coverage, 0);
+  const weightedScore = effectiveCoverage ? available.reduce((sum, item) => sum + (item.score as number) * item.weight * item.coverage, 0) / effectiveCoverage : null;
+  const confidence = effectiveCoverage ? available.reduce((sum, item) => sum + (item.confidence ?? 0) * item.weight * item.coverage, 0) / effectiveCoverage : null;
+  const enough = effectiveCoverage >= policy.minimumCoverage && available.length >= policy.minimumGroups && confidence !== null && confidence >= policy.minimumConfidence;
   const score = enough && weightedScore !== null ? Math.round(weightedScore * 100) / 100 : null;
   return {
     modelVersion: MODEL_VERSION, status: enough ? "scored" : "insufficient_data", score,
     regime: score === null ? null : score >= 60 ? "bullish" : score <= 40 ? "bearish" : "neutral",
-    coverage: Math.round(coverage * 10_000) / 10_000,
+    coverage: Math.round(effectiveCoverage * 10_000) / 10_000,
     confidence: confidence === null ? null : Math.round(confidence * 10_000) / 10_000,
     asOf: asOf.toISOString(), components: groups, acceptedInputKeys: accepted.map((item) => item.key), rejectedInputs,
-    methodology: { minimumCoverage: policy.minimumCoverage, minimumGroups: policy.minimumGroups, thresholds: { bearishMaximum: 40, bullishMinimum: 60 } },
+    methodology: {
+      minimumCoverage: policy.minimumCoverage, minimumGroups: policy.minimumGroups,
+      thresholds: { bearishMaximum: 40, bullishMinimum: 60 },
+      expectedInputsPerGroup: policy.expectedInputsPerGroup,
+    },
   };
 }

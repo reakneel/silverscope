@@ -60,3 +60,23 @@ export async function persistQuantSnapshot(
   }], "resolution=ignore-duplicates,return=representation") as unknown[] | null;
   return { scoreId, signalRows: signalRows?.length ?? 0, snapshotKey };
 }
+export async function fetchObservationsForIndicator(
+  options: PipelineOptions, indicatorKey: string, limit = 5000,
+): Promise<Observation[]> {
+  const rest = createRest(options);
+  const query = new URLSearchParams({
+    select: "source_id,indicator_key,value,unit,observed_at,published_at,fetched_at,confidence,status,source_url,source_record_id",
+    indicator_key: `eq.${indicatorKey}`, order: "observed_at.desc",
+    limit: String(Math.max(1, Math.min(limit, 5000))),
+  });
+  const rows = await rest(`observations?${query.toString()}`) as Array<Record<string, unknown>> | null;
+  return (rows ?? []).map((row) => ({
+    sourceId: String(row.source_id), indicatorKey: String(row.indicator_key),
+    value: Number(row.value), unit: String(row.unit), observedAt: String(row.observed_at),
+    publishedAt: row.published_at ? String(row.published_at) : null,
+    fetchedAt: String(row.fetched_at), confidence: Number(row.confidence),
+    status: row.status as Observation["status"],
+    sourceUrl: row.source_url ? String(row.source_url) : null,
+    sourceRecordId: row.source_record_id ? String(row.source_record_id) : null,
+  }));
+}
