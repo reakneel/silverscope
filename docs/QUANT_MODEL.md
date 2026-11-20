@@ -1,35 +1,40 @@
-# Quant Model — Version 0.1.0
+# Quantitative Model
 
-## Component hypotheses
-| Component | Weight | Example features |
-|---|---:|---|
-| Inventory & liquidity | 30% | COMEX/LBMA stocks, lease rates, curve, spreads |
-| Macro | 25% | USD proxies, real yields, policy expectations |
-| Supply & industrial demand | 30% | mine supply, recycling, solar, electronics, substitution |
-| Positioning | 15% | CFTC positioning, ETF flows, volatility |
+## Scope
+The initial composite model is a transparent research hypothesis, not a validated trading strategy or investment recommendation. Model version: `silverscope-composite-0.1.0`.
 
-These weights are research hypotheses, not empirically optimized parameters.
+## Pipeline
+1. Fetch immutable observations with provenance and quality metadata.
+2. Select the latest observation for each calibrated indicator.
+3. Convert raw units into a directional 0–100 feature score using configured historical mean and standard deviation.
+4. Apply freshness, confidence, status and duplicate checks.
+5. Aggregate features by group and combine available groups using configured weights.
+6. Publish a regime classification only when minimum coverage, group count and confidence requirements are met.
+7. Persist score and evidence-linked signal snapshots idempotently.
 
-## Scoring contract
-The engine accepts normalized feature signals in the range 0–100. A feature score must be directionally normalized before aggregation; raw values in incompatible units must never be averaged. A positive direction means a stronger silver-market backdrop, while a negative direction must be inverted by the feature adapter before it reaches the composite engine.
+## Calibration
+The pipeline requires `SILVER_FEATURE_CALIBRATION_JSON`. Each entry has `indicatorKey`, `group`, `mean`, `standardDeviation` and `direction` (1 or -1). Parameters must be estimated from a documented historical training window, appropriate frequency and point-in-time data. Do not copy illustrative values into production. Until calibration is supplied, score generation returns `calibration_required`.
 
-Initial descriptive regime thresholds:
-- 0–40: bearish
-- above 40 and below 60: neutral
-- 60–100: bullish
+Example schema only (values are deliberately placeholders and must not be deployed):
+```json
+[
+  {
+    "indicatorKey": "us_10y_real_yield",
+    "group": "macro",
+    "mean": 0,
+    "standardDeviation": 1,
+    "direction": -1
+  }
+]
+```
 
-These are not trade recommendations.
+## Current policy
+- Group weights: inventory/liquidity 30%, macro 25%, supply/demand 30%, positioning 15%.
+- Minimum group coverage: 65%.
+- Minimum available groups: 2.
+- Minimum confidence: 0.35.
+- Maximum observation age: 45 days.
+- Composite regime: bullish >= 60, bearish <= 40, otherwise neutral.
 
-## Coverage and confidence
-Component weights are inventory/liquidity 30%, macro 25%, supply/demand 30%, and positioning 15%. Coverage is the sum of weights for components with at least one accepted input. The score is withheld unless coverage is at least 65%, at least two components are represented, and aggregate confidence meets the configured minimum.
-
-Within a component, inputs are confidence-weighted. Estimated observations receive a configurable confidence haircut; manual observations receive a larger haircut and can be disabled by policy. Stale, unavailable, malformed, future-dated, duplicate, or low-confidence inputs are rejected.
-
-## Normalization
-normalizeZScore maps a direction-adjusted z-score to 50 + 15z, clipped to 0–100. It requires a historical mean and standard deviation computed only from data available at the observation timestamp. It returns no value when the standard deviation is non-positive or inputs are invalid. Production adapters must document the rolling window and prevent look-ahead bias.
-
-## Output and reproducibility
-Each score includes model version, as-of timestamp, accepted input keys, rejected inputs and reasons, component contributions, coverage, confidence and thresholds. Persistence must retain the exact input snapshot and model parameters used for each score.
-
-## Validation before publication
-Use time-based train/test splits, walk-forward evaluation, transaction costs and slippage. Report drawdown, turnover, calibration and benchmark comparisons. Do not publish win rates or performance claims until reproducible backtests exist.
+## Interpretation
+A score is a normalized market-state classification. It is not a probability of profit, a return forecast, or a buy/sell instruction. A signal records the model version, component evidence, accepted inputs and invalidation conditions. Historical performance claims require point-in-time data, walk-forward validation, transaction costs and out-of-sample reporting.

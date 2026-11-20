@@ -1,32 +1,25 @@
-# Data ingestion and quality pipeline
-
-## Current implementation
-The repository provides typed observation contracts, validation rules, a source registry, a FRED macro adapter, an ingestion runner and a server-side Supabase REST persistence adapter. FRED ingestion is available through a protected cron route, but it is inactive until API credentials and a Supabase project are configured.
+# Ingestion Operations
 
 ## FRED macro adapter
-The adapter retrieves three primary-source series:
-- DFII10 → 10-year US real yield
-- DTWEXBGS → broad trade-weighted US dollar index (not ICE DXY)
-- DGS10 → 10-year US nominal Treasury yield
+The FRED adapter fetches DFII10 (10-year real yield), DTWEXBGS (broad trade-weighted USD index; not ICE DXY) and DGS10 (10-year nominal yield). It leaves `published_at` null when the response does not supply an exact publication timestamp. Latest-run mode fetches the latest available observation per series; `?since=YYYY-MM-DD` requests a historical range.
 
-The FRED API requires a registered API key. Latest mode requests the newest observation per series; backfill mode accepts a YYYY-MM-DD start date and requests up to 100,000 observations per series. FRED's observation endpoint does not provide an exact publication timestamp in this payload, so published_at remains null rather than being guessed. The observation date is stored at midnight UTC as a date-only convention.
+## CFTC silver positioning adapter
+The CFTC adapter reads the official Disaggregated Futures Only Socrata dataset `72hh-3qpy`, filters COMEX standard Silver contract code `084691`, and calculates managed-money net contracts as long minus short. It excludes Micro Silver and the futures-and-options-combined universe. Report date is the Tuesday position date; publication time is not guessed. Historical pagination is capped at 100,000 rows.
 
-## Protected ingestion endpoint
-GET or POST /api/cron/ingest/fred requires Authorization: Bearer CRON_SECRET. It also requires NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and FRED_API_KEY. The endpoint:
-1. Fetches the configured FRED series.
-2. Validates timestamp, confidence, freshness and status.
-3. Creates an ingestion run.
-4. Inserts observations using a deterministic dedupe key and ignore-duplicates semantics.
-5. Records accepted/rejected counts and run status.
+## Protected endpoints
+- `GET /api/cron/ingest/fred`
+- `GET /api/cron/ingest/cftc`
+- `POST /api/cron/ingest/fred`
+- Authorization header: `Bearer $CRON_SECRET`
+- FRED requires `FRED_API_KEY`; CFTC public reporting endpoint does not require a key for polite usage.
+- Both require `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `CRON_SECRET`.
 
-The service-role key is only read server-side. Do not expose it in client code or logs. Configure CRON_SECRET in Vercel before scheduling or manually invoking the route.
+## Quant scoring endpoint
+- `GET /api/cron/score`
+- Authorization header: `Bearer $CRON_SECRET`
+- Required server environment: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`, `SILVER_FEATURE_CALIBRATION_JSON`
+- Calibration JSON must contain empirically estimated parameters. An absent/invalid calibration returns a configuration error; insufficient coverage returns an explicit non-scored response.
+- Scores and signals are persisted with unique idempotency keys so retries do not create duplicate snapshots.
 
-## Source activation checklist
-A source remains disabled until ownership, license/redistribution terms, API limits, cadence, publication lag, units, schema, backfill behavior and failure modes have been documented. The registry is a catalogue, not proof of connectivity.
-
-## Other source candidates
-- CFTC: weekly positioning reports; align report date and publication date.
-- CME/COMEX: inventory and futures data; verify redistribution terms.
-- LBMA: vault and physical-market data; verify access and licensing.
-
-No silver spot feed is enabled by default. Do not substitute a proxy series and label it spot silver.
+## Operational notes
+Apply migrations in numerical order. Use a staging project first. Start with a narrow historical backfill and verify counts, timestamps, units, duplicate behavior and source status before scheduling production jobs. Keep secrets server-side. Do not schedule ingestion until the source access terms and retention requirements are reviewed.
