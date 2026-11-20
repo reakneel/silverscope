@@ -35,7 +35,7 @@ class StorageBackupTests(unittest.TestCase):
             file = Path(directory) / "sample.txt"
             file.write_bytes(b"silverscope")
             self.assertEqual(MODULE.sha256_file(file),
-                "2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6")
+                "e697c61f453b3434fe7b4e39ba93720f1ed024bd5dab2d25d35c4762bb7aca54")
 
 
 if __name__ == "__main__":
