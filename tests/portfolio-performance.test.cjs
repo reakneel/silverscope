@@ -42,8 +42,8 @@ test("FIFO realized P&L capitalizes buy fees and subtracts sell costs", () => {
 test("performance series computes cash-flow adjusted periodic and cumulative returns", () => {
   const result = calculatePerformanceSeries([
     { date: "2026-01-01", value: 100 },
-    { date: "2026-01-02", value: 220 },
-    { date: "2026-01-03", value: 231 },
+    { date: "2026-01-02", value: 210 },
+    { date: "2026-01-03", value: 220.5 },
   ], [{ date: "2026-01-02", amount: 100, type: "external_inflow" }]);
   assert.equal(result[1].periodReturnPct, 10);
   assert.equal(result[2].cumulativeReturnPct, 15.500000000000014);
