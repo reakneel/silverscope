@@ -91,7 +91,7 @@ def psql_copy_path(path: Path) -> str:
     return value
 
 
-def load_archive_into_temp(path: Path) -> tuple[Path, tempfile.TemporaryDirectory[str]]:
+def load_archive_into_temp(path: Path) -> tuple[Path, tempfile.TemporaryDirectory]:
     directory = tempfile.TemporaryDirectory(prefix="silverscope-cold-archive-")
     plain = Path(directory.name) / "archive.csv"
     with gzip.open(path, "rb") as source, plain.open("wb") as target:
