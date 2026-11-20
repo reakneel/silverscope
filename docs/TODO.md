@@ -69,6 +69,8 @@
 - [x] Add append-only Supabase schema and owner-scoped RLS for experiment manifests, run snapshots and artifacts
 - [ ] Apply migration 0006 after provisioning Supabase
 - [ ] Build a persistent historical data store and reproducible dataset snapshots
+- [x] Add non-overlapping out-of-sample walk-forward report aggregation with explicit calendar-gap handling
+- [x] Add Bonferroni family-wise multiple-testing correction helper
 - [ ] Full strategy simulation and walk-forward performance reports
 - [ ] Transaction costs and slippage
 - [ ] Benchmark and risk metrics
