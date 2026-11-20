@@ -9,11 +9,11 @@ execFileSync(process.execPath, [
   "lib/research/backtest.ts", "lib/research/walk-forward.ts", "lib/research/futures-execution.ts", "lib/research/position-sizing.ts", "lib/research/volume-execution.ts", "lib/research/portfolio-risk.ts", "lib/research/snapshot.ts", "lib/research/walk-forward-report.ts", "lib/research/scenario-analysis.ts", "lib/research/portfolio-execution.ts", "lib/monitoring/source-health.ts", "lib/billing/entitlements.ts", "lib/billing/stripe-webhook.ts", "lib/research/point-in-time.ts", "lib/quant/engine.ts", "lib/quant/calibration.ts", "lib/quant/features.ts", "lib/quant/signals.ts",
   "lib/quant/supabase-pipeline.ts", "lib/data/market-overview.ts", "lib/data/quality.ts",
   "lib/ingestion/fred-adapter.ts", "lib/ingestion/cftc-adapter.ts", "lib/ingestion/cme-inventory-csv.ts", "lib/ingestion/licensed-price-csv.ts",
-  "lib/ingestion/supabase-rest.ts",
+  "lib/ingestion/supabase-rest.ts", "lib/portfolio/huatai-csv.ts",
 ], { stdio: "inherit" });
 execFileSync(process.execPath, ["--test",
   "tests/backtest.test.cjs", "tests/walk-forward.test.cjs", "tests/futures-execution.test.cjs", "tests/position-sizing.test.cjs", "tests/volume-execution.test.cjs", "tests/portfolio-risk.test.cjs", "tests/research-snapshot.test.cjs", "tests/walk-forward-report.test.cjs", "tests/scenario-analysis.test.cjs", "tests/portfolio-execution.test.cjs", "tests/source-health.test.cjs", "tests/entitlements.test.cjs", "tests/stripe-webhook.test.cjs", "tests/point-in-time.test.cjs", "tests/quant.test.cjs", "tests/quality.test.cjs",
   "tests/fred-adapter.test.cjs", "tests/cftc-adapter.test.cjs", "tests/cme-inventory-csv.test.cjs", "tests/licensed-price-csv.test.cjs",
-  "tests/supabase-rest.test.cjs", "tests/features.test.cjs", "tests/quant-pipeline.test.cjs", "tests/market-overview.test.cjs", "tests/calibration.test.cjs",
+  "tests/supabase-rest.test.cjs", "tests/huatai-csv.test.cjs", "tests/features.test.cjs", "tests/quant-pipeline.test.cjs", "tests/market-overview.test.cjs", "tests/calibration.test.cjs",
 ], { stdio: "inherit" });
 fs.rmSync(output, { recursive: true, force: true });
