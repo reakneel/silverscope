@@ -29,7 +29,7 @@ python ./scripts/db/cold-archive-observations.py --verify-archive ".\backups\col
 Only after reviewing the archive and copying both the gzip file and its JSON manifest to a second independent location, explicitly allow source-row deletion using that already-created archive (the delete command does not create a new backup):
 
 ~~~powershell
-python ./scripts/db/cold-archive-observations.py --apply-delete --archive-file ".\\backups\\cold-observations\\silverscope-observations-before-YYYYMMDDTHHMMSSZ.csv.gz"
+python ./scripts/db/cold-archive-observations.py --apply-delete --archive-file ".\backups\\cold-observations\\silverscope-observations-before-YYYYMMDDTHHMMSSZ.csv.gz"
 ~~~
 
 The deletion transaction imports the exact archived ID/hash set into a temporary table and verifies:
