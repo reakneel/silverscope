@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentSupabaseUser } from "@/lib/auth/supabase-session";
-import { HuataiImportPanel } from "@/components/portfolio/huatai-import-panel";\nimport { PortfolioAccountManager } from "@/components/portfolio/account-manager";
+import { HuataiImportPanel } from "@/components/portfolio/huatai-import-panel";
+import { PortfolioAccountManager } from "@/components/portfolio/account-manager";
 
 export const dynamic = "force-dynamic";
 
