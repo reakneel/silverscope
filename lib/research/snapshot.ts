@@ -34,8 +34,10 @@ export interface ExperimentDefinition {
   parameters: Record<string, unknown>;
   assumptions: Record<string, unknown>;
 }
-export interface ExperimentManifest extends ExperimentDefinition {
+export interface ExperimentManifest extends Omit<ExperimentDefinition, "parameters" | "assumptions"> {
   schemaVersion: "silverscope-experiment/1";
+  parameters: JsonValue;
+  assumptions: JsonValue;
   manifestSha256: string;
 }
 function normalizeJson(value: unknown, path = "value"): JsonValue {
