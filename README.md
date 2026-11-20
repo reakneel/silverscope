@@ -76,6 +76,11 @@ The score engine accepts normalized feature scores, not raw market values in inc
 - See [docs/DATABASE_BACKUP.md](docs/DATABASE_BACKUP.md) for Windows PowerShell and macOS/Linux full PostgreSQL backup, SHA-256 verification, retention and local-only restore instructions.
 - Local dumps are written under `backups/supabase/` by default and are ignored by Git. Supabase Storage object bytes require a separate backup.
 
+## Data warehouse, automation and local backups
+- Historical observations are exposed through `observation_history`; rows older than 365 days can be moved into monthly PostgreSQL partitions by the protected warehouse job.
+- Vercel cron schedules FRED/CFTC ingestion, source-health checks, data-quality snapshots and weekly warehouse archival. Only public FRED/CFTC feeds are automated; licensed price and CME inventory imports remain controlled.
+- See [docs/DATA_WAREHOUSE.md](docs/DATA_WAREHOUSE.md), [docs/MIGRATION_RECONCILIATION.md](docs/MIGRATION_RECONCILIATION.md) and [docs/DATABASE_BACKUP.md](docs/DATABASE_BACKUP.md) for operations and migration safety.
+
 ## Environment
 Copy .env.example to .env.local. FRED ingestion requires FRED_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and CRON_SECRET. CFTC ingestion requires the Supabase URL, service-role key and CRON_SECRET. Scoring additionally requires SILVER_FEATURE_CALIBRATION_JSON. The calibration preview endpoint can derive candidate means and sample standard deviations from verified historical observations, but its output must be reviewed for window choice, market-regime coverage and point-in-time leakage before activation. Never expose the service-role key to a browser.
 
