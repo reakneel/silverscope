@@ -60,6 +60,7 @@ Open http://localhost:3000.
 - lib/research/snapshot.ts — canonical SHA-256 point-in-time research snapshots and versioned experiment manifests
 - lib/research/walk-forward-report.ts — non-overlapping out-of-sample report stitching and Bonferroni multiple-testing correction
 - lib/research/scenario-analysis.ts — multi-contract price-shock stress tests and execution-cost sensitivity analysis
+- lib/research/portfolio-execution.ts — shared-equity multi-contract execution, volume-limited persistent target orders, margin admission and liquidation
 - lib/research/point-in-time.ts — strict publication-time feature availability gate
 - supabase/migrations/ — relational schema, seeds, RLS and snapshot fingerprinting
 
