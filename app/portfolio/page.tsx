@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentSupabaseUser } from "@/lib/auth/supabase-session";
 import { HuataiImportPanel } from "@/components/portfolio/huatai-import-panel";
+import { PortfolioDashboardPanel } from "@/components/portfolio/dashboard-panel";
 import { PortfolioAccountManager } from "@/components/portfolio/account-manager";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export default async function PortfolioPage() {
     </section>
     {!user ? <section className="panel"><h2>Sign in to continue</h2><p className="muted">Portfolio accounts and imported statements are private to the signed-in user.</p><Link className="button-primary portfolio-link" href="/login">Sign in</Link></section> : <>
       <section className="notice"><strong>Account data is not connected</strong><p>There are no verified Huatai holdings, cash balances or executions in this workspace yet. Values remain blank until source statements are imported and reconciled.</p></section>
+      <PortfolioDashboardPanel />
       <div className="portfolio-grid">
         <PortfolioAccountManager />
         <HuataiImportPanel />
