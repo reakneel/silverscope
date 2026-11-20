@@ -64,6 +64,7 @@ create table if not exists public.portfolio_raw_records (
   raw_payload jsonb not null,
   created_at timestamptz not null default now(),
   foreign key (batch_id, owner_id) references public.portfolio_import_batches(id, owner_id) on delete restrict,
+  unique (id, owner_id),
   unique (batch_id, source_row_number),
   unique (batch_id, row_fingerprint)
 );
@@ -104,7 +105,7 @@ create table if not exists public.portfolio_transactions (
   created_at timestamptz not null default now(),
   foreign key (account_id, owner_id) references public.portfolio_accounts(id, owner_id) on delete restrict,
   foreign key (batch_id, owner_id) references public.portfolio_import_batches(id, owner_id) on delete restrict,
-  foreign key (raw_record_id) references public.portfolio_raw_records(id) on delete restrict,
+  foreign key (raw_record_id, owner_id) references public.portfolio_raw_records(id, owner_id) on delete restrict,
   unique (account_id, source_fingerprint)
 );
 create index if not exists portfolio_transactions_account_time_idx
