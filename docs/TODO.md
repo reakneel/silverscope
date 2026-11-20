@@ -77,7 +77,7 @@
 ## P3 — Research quality
 - [x] Add canonical SHA-256 point-in-time research snapshots and versioned experiment manifests
 - [x] Add append-only Supabase schema and owner-scoped RLS for experiment manifests, run snapshots and artifacts
-- [ ] Apply migration 0006 after provisioning Supabase
+- [ ] Reconcile duplicate 0006 version prefixes and apply the complete migration history after verifying remote state
 - [x] Add monthly partitioned historical observation archive and a unified hot/archive history view
 - [x] Add protected bounded-batch warehouse archival endpoint
 - [x] Add incremental local Supabase Storage backup with object SHA-256 manifests
