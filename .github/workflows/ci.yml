@@ -22,6 +22,8 @@ jobs:
         run: node -e 'JSON.parse(require("fs").readFileSync("vercel.json", "utf8"))'
       - name: Test Storage backup safety
         run: python3 -m unittest discover -s tests -p 'test_storage_backup.py'
+      - name: Test cold archive safety
+        run: python3 -m unittest discover -s tests -p 'test_cold_archive.py'
       - name: Validate database backup scripts
         run: bash -n scripts/db/backup-supabase.sh scripts/db/restore-local.sh
       - name: Unit tests
