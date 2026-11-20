@@ -167,6 +167,6 @@ export function previewHuataiCsv(buffer: ArrayBuffer, kind: ImportKind): CsvPrev
       "尚未用真实华泰导出样本验证表头映射；确认前请勿提交账本。",
       "持仓快照不是成交流水；成交文件也不能单独证明账户现金余额。",
     ],
-    sha256: hash(Buffer.from(buffer).toString("base64")),
+    sha256: createHash("sha256").update(Buffer.from(buffer)).digest("hex"),
   };
 }
