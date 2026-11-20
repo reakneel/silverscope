@@ -102,11 +102,11 @@ def delete_archived_rows(database_url: str, archive_path: Path, cutoff: str) -> 
         copy_path = psql_copy_path(plain)
         sql = f"""BEGIN;
 CREATE TEMP TABLE _silverscope_archive_rows(row_json jsonb NOT NULL) ON COMMIT DROP;
-\\\\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
+\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
 SELECT set_config('silverscope.archive_cutoff', '{cutoff}', true);
 DO $$
 DECLARE expected_count bigint; matched_count bigint; eligible_count bigint; deleted_count bigint;
-DECLARE cutoff_value timestamptz := current_setting('silverscope.archive_cutoff')::timestamptz;
+        cutoff_value timestamptz := current_setting('silverscope.archive_cutoff')::timestamptz;
 BEGIN
   SELECT count(*) INTO expected_count FROM _silverscope_archive_rows;
   SELECT count(*) INTO matched_count
@@ -147,7 +147,7 @@ def restore_archive(database_url: str, archive_path: Path) -> None:
         copy_path = psql_copy_path(plain)
         sql = f"""BEGIN;
 CREATE TEMP TABLE _silverscope_archive_rows(row_json jsonb NOT NULL) ON COMMIT DROP;
-\\\\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
+\copy _silverscope_archive_rows(row_json) FROM '{copy_path}' WITH (FORMAT csv, HEADER true)
 INSERT INTO public.observations
 SELECT (jsonb_populate_record(NULL::public.observations, row_json->'row')).*
 FROM _silverscope_archive_rows
