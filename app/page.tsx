@@ -14,12 +14,13 @@ export default async function DashboardPage() {
   const score = overview.score;
   const managedMoney = overview.observations.cftc_managed_money_net;
   const realYield = overview.observations.us_10y_real_yield;
+  const silverSpot = overview.observations.silver_spot_usd_oz;
   const componentMap = new Map((score?.components ?? []).map((component) => [component.group, component.score]));
   const live = Object.keys(overview.observations).length > 0 || Boolean(score);
   return <div className="page-wrap">
     <div className="page-heading"><div><div className="eyebrow">RESEARCH WORKSPACE</div><h1>Market overview</h1><p>Understand what is moving silver — and what could change next.</p></div><span className="demo-tag"><span/> {live ? "OBSERVATIONS AVAILABLE" : "DEMO · NO LIVE FEED"}</span></div>
     <section className="metric-grid">
-      <article className="metric-card"><div className="metric-label">Silver spot</div><div className="metric-value">$—</div><div className="metric-change muted">Price feed not connected</div></article>
+      <article className="metric-card"><div className="metric-label">Silver spot</div><div className="metric-value">{silverSpot ? `${number(silverSpot.value)}` : "$—"}</div><div className="metric-change muted">{silverSpot ? `USD/oz · as of ${silverSpot.observedAt.slice(0, 10)}` : "Licensed price feed not connected"}</div></article>
       <article className="metric-card"><div className="metric-label">SilverScope score</div><div className="metric-value">{score ? `${number(score.score)} / 100` : "— / 100"}</div><div className="metric-change muted">{score ? `Coverage ${number(score.coverage * 100, 0)}% · ${score.modelVersion}` : "Awaiting calibrated inputs"}</div></article>
       <article className="metric-card"><div className="metric-label">CFTC managed-money net</div><div className="metric-value">{managedMoney ? number(managedMoney.value, 0) : "—"}</div><div className="metric-change muted">{managedMoney ? `Contracts · as of ${managedMoney.observedAt.slice(0, 10)}` : "CFTC source not connected"}</div></article>
       <article className="metric-card"><div className="metric-label">US 10Y real yield</div><div className="metric-value">{realYield ? `${number(realYield.value)}%` : "—"}</div><div className="metric-change muted">{realYield ? `FRED · as of ${realYield.observedAt.slice(0, 10)}` : "FRED source not connected"}</div></article>

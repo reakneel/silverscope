@@ -10,7 +10,7 @@ SilverScope is a silver-market intelligence and quantitative research SaaS. It o
 - FRED macro adapter: DFII10, DTWEXBGS and DGS10 (API key required)
 - CFTC Disaggregated Futures Only adapter for COMEX standard Silver managed-money net positions
 - Supabase Postgres schema, RLS and server-side REST persistence (requires project credentials)
-- Planned: licensed COMEX/LBMA/spot feeds, Python research/backtesting workers, Stripe
+- Planned: automated licensed market-data feeds, Python research/backtesting workers, Stripe
 
 ## Run locally
 ```bash
@@ -30,6 +30,8 @@ Open http://localhost:3000.
 - /api/health — Application configuration status
 - /api/cron/ingest/fred — Protected FRED macro ingestion endpoint
 - /api/cron/ingest/cftc — Protected CFTC Silver positioning ingestion endpoint
+- /api/cron/ingest/cme-comex — Protected POST endpoint for importing a converted CME Silver Stocks CSV
+- /api/cron/ingest/market-price — License-gated POST endpoint for importing licensed silver spot CSV data
 - /api/cron/calibration/preview — Protected historical calibration preview; does not activate parameters
 - /api/cron/score — Protected calibration-gated score and signal snapshot endpoint
 
@@ -40,6 +42,8 @@ Open http://localhost:3000.
 - lib/data/market-overview.ts — server-only reads for latest stored observations, score and signal
 - lib/ingestion/fred-adapter.ts — DFII10, DTWEXBGS and DGS10
 - lib/ingestion/cftc-adapter.ts — CFTC Disaggregated Futures Only, standard COMEX Silver contract 084691
+- lib/ingestion/cme-inventory-csv.ts — strict COMEX registered / eligible / total warehouse stock CSV parser
+- lib/ingestion/licensed-price-csv.ts — provenance-preserving silver spot CSV parser with provider validation
 - lib/ingestion/runner.ts — adapter execution and validation
 - lib/ingestion/supabase-rest.ts — idempotent server-side observation persistence
 - lib/quant/engine.ts — versioned, coverage-aware composite scoring
@@ -58,7 +62,7 @@ Copy .env.example to .env.local. FRED ingestion requires FRED_API_KEY, NEXT_PUBL
 Every production observation preserves source, observed/published/fetched timestamps, unit, status and confidence. FRED and CFTC report APIs do not provide an exact publication timestamp in the observation payload used here, so published_at is left null. Raw observations are deduplicated and never silently overwritten with guessed values. CFTC positioning is Tuesday-as-of data, not Friday publication-time data.
 
 ## Documentation
-See docs/ARCHITECTURE.md, docs/DATA_SOURCES.md, docs/INGESTION.md, docs/QUANT_MODEL.md, docs/SUPABASE.md and docs/TODO.md.
+See docs/ARCHITECTURE.md, docs/DATA_SOURCES.md, docs/INGESTION.md, docs/QUANT_MODEL.md, docs/RESEARCH_VALIDATION.md, docs/SUPABASE.md and docs/TODO.md.
 
 ## Disclaimer
 SilverScope is intended as a general market research and information tool. It is not personalized investment advice, a solicitation, or a guarantee of trading outcomes. Regulatory review is required before offering paid signals or strategy features in any target jurisdiction.
