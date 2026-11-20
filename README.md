@@ -31,6 +31,7 @@ Open http://localhost:3000.
 - /api/cron/ingest/fred — Protected FRED macro ingestion endpoint
 - /api/cron/ingest/cftc — Protected CFTC Silver positioning ingestion endpoint
 - /api/cron/ingest/cme-comex — Protected POST endpoint for importing a converted CME Silver Stocks CSV
+- /api/cron/ingest/market-price — License-gated POST endpoint for importing licensed silver spot CSV data
 - /api/cron/calibration/preview — Protected historical calibration preview; does not activate parameters
 - /api/cron/score — Protected calibration-gated score and signal snapshot endpoint
 
@@ -42,6 +43,7 @@ Open http://localhost:3000.
 - lib/ingestion/fred-adapter.ts — DFII10, DTWEXBGS and DGS10
 - lib/ingestion/cftc-adapter.ts — CFTC Disaggregated Futures Only, standard COMEX Silver contract 084691
 - lib/ingestion/cme-inventory-csv.ts — strict COMEX registered / eligible / total warehouse stock CSV parser
+- lib/ingestion/licensed-price-csv.ts — provenance-preserving silver spot CSV parser with provider validation
 - lib/ingestion/runner.ts — adapter execution and validation
 - lib/ingestion/supabase-rest.ts — idempotent server-side observation persistence
 - lib/quant/engine.ts — versioned, coverage-aware composite scoring
