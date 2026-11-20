@@ -59,7 +59,8 @@
 - [ ] Enforce authentication on all protected dashboard pages and user-owned API resources
 - [x] Add server-side Free / Pro / Ultra entitlement resolver
 - [x] Add authenticated Stripe subscription checkout endpoint with configured Price IDs
-- [ ] Configure Stripe products/prices and customer portal in the provider account
+- [x] Add authenticated Stripe customer portal session endpoint
+- [ ] Configure Stripe products/prices and customer portal settings in the provider account
 - [x] Add timestamp-bound, signature-verified, idempotent Stripe subscription webhooks
 - [x] Add Free / Pro / Ultra feature entitlement matrix
 - [ ] Apply migrations 0006 and 0007 after provisioning Supabase
