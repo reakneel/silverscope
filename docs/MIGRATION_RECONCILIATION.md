@@ -1,21 +1,22 @@
 # Supabase migration history reconciliation
 
-**Do not run `supabase db push` until this check is completed.**
+**Do not run supabase db push until this check is completed.**
 
-The repository currently contains two migration files with the same numeric version prefix `0006`:
-- `0006_cme_inventory_indicators.sql`
-- `0006_research_snapshots.sql`
+The repository has duplicate numeric migration prefixes:
+- 0006_cme_inventory_indicators.sql
+- 0006_research_snapshots.sql
 
-Supabase CLI migration versions must be unique. The project also has an existing `0007_stripe_webhook_events.sql`. The new warehouse and monitoring migrations use `0008` and `0009`, but adding them does not resolve the older duplicate.
+The repository also contains 0007_stripe_webhook_events.sql, followed by 0008_historical_warehouse.sql and 0009_data_quality_monitoring.sql.
 
-No database migration history was queried or changed during this code phase. The Vercel Supabase connector connection alone does not establish which migrations have been applied.
+The correct order of the two 0006 migrations cannot be inferred from filenames or from the fact that the Vercel project has a Supabase connector. No remote supabase_migrations.schema_migrations table has been queried in this development session.
 
-## Safe procedure
+## Safe reconciliation procedure
 
-1. In a staging Supabase project, inspect `supabase_migrations.schema_migrations` and run `supabase migration list` with the linked project.
-2. If none of the duplicate-prefix migrations has been applied, assign unique ordered versions to the two 0006 files and the 0007 file, update references/docs, and validate the resulting migration list before pushing.
-3. If any migration has already been applied, do not rename it blindly. Preserve the applied remote version and use `supabase migration repair` only after comparing exact SQL contents and intended order.
-4. Take a verified database backup before applying any production migration.
-5. Apply to staging first, test RLS, auth, ingestion, archive and restore parity, then apply to production in a maintenance window.
+1. Create a verified full PostgreSQL backup and a separate Storage object backup.
+2. Inspect remote migration history with supabase migration list and query supabase_migrations.schema_migrations using a locally configured Supabase CLI profile.
+3. Compare exact SQL contents of the remote-applied versions with repository migrations.
+4. If neither 0006 file has been applied, rename/resequence the local files into unique versions in a dedicated migration PR, then validate the local/remote list.
+5. If either 0006 migration is already applied, do not rename or rewrite that applied version. Use supabase migration repair only after exact content and dependency reconciliation.
+6. Apply to staging, verify RLS/auth/ingestion/Stripe/observation history and run restore tests. Then apply to production in a controlled window.
 
-This repository intentionally does not guess the remote migration state or auto-apply SQL through a connector.
+The application intentionally does not auto-apply SQL or guess remote migration state. The data archive migration was hardened so duplicate dedupe keys cannot cause a hot row to be deleted without exact archived-row parity, but production migration activation still requires this reconciliation.
